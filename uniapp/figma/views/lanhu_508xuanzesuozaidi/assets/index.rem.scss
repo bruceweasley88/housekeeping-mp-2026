@@ -1,0 +1,177 @@
+.page {
+  background-color: rgba(0, 0, 0, 0.79);
+  position: relative;
+  width: 10.987rem;
+  height: 24.16rem;
+  overflow: hidden;
+  .box_1 {
+    background-color: rgba(255, 255, 255, 1);
+    border-radius: 16px 16px 0px 0px;
+    height: 11.734rem;
+    margin-top: 12.427rem;
+    width: 10.987rem;
+    .text-wrapper_1 {
+      width: 4.054rem;
+      height: 0.8rem;
+      margin: 1.067rem 0 0 3.44rem;
+      .text_1 {
+        width: 4.054rem;
+        height: 0.8rem;
+        overflow-wrap: break-word;
+        color: rgba(35, 42, 63, 1);
+        font-size: 0.586rem;
+        font-family: Alibaba PuHuiTi-Medium;
+        font-weight: 500;
+        text-align: left;
+        white-space: nowrap;
+        line-height: 0.587rem;
+      }
+    }
+    .text-wrapper_2 {
+      width: 1.44rem;
+      height: 0.667rem;
+      margin: 0.747rem 0 0 4.747rem;
+      .text_2 {
+        width: 1.44rem;
+        height: 0.667rem;
+        overflow-wrap: break-word;
+        color: rgba(35, 42, 63, 0.2);
+        font-size: 0.48rem;
+        font-family: Alibaba PuHuiTi-Regular;
+        font-weight: NaN;
+        text-align: center;
+        white-space: nowrap;
+        line-height: 0.48rem;
+      }
+    }
+    .text-wrapper_3 {
+      width: 1.44rem;
+      height: 0.667rem;
+      margin: 0.854rem 0 0 4.747rem;
+      .text_3 {
+        width: 1.44rem;
+        height: 0.667rem;
+        overflow-wrap: break-word;
+        color: rgba(35, 42, 63, 0.5);
+        font-size: 0.48rem;
+        font-family: Alibaba PuHuiTi-Regular;
+        font-weight: NaN;
+        text-align: center;
+        white-space: nowrap;
+        line-height: 0.48rem;
+      }
+    }
+    .text-wrapper_4 {
+      width: 8.24rem;
+      height: 0.667rem;
+      margin: 0.854rem 0 0 1.067rem;
+      .text_4 {
+        width: 1.44rem;
+        height: 0.667rem;
+        overflow-wrap: break-word;
+        color: rgba(35, 42, 63, 1);
+        font-size: 0.48rem;
+        font-family: Alibaba PuHuiTi-Regular;
+        font-weight: NaN;
+        text-align: center;
+        white-space: nowrap;
+        line-height: 0.48rem;
+      }
+      .text_5 {
+        width: 1.44rem;
+        height: 0.667rem;
+        overflow-wrap: break-word;
+        color: rgba(35, 42, 63, 1);
+        font-size: 0.48rem;
+        font-family: Alibaba PuHuiTi-Regular;
+        font-weight: NaN;
+        text-align: center;
+        white-space: nowrap;
+        line-height: 0.48rem;
+        margin-left: 2.24rem;
+      }
+      .text_6 {
+        width: 1.44rem;
+        height: 0.667rem;
+        overflow-wrap: break-word;
+        color: rgba(35, 42, 63, 1);
+        font-size: 0.48rem;
+        font-family: Alibaba PuHuiTi-Regular;
+        font-weight: NaN;
+        text-align: center;
+        white-space: nowrap;
+        line-height: 0.48rem;
+        margin-left: 1.68rem;
+      }
+    }
+    .group_1 {
+      width: 4.56rem;
+      height: 2.187rem;
+      margin: 0.854rem 0 0 4.747rem;
+      .list_1 {
+        width: 4.56rem;
+        height: 2.187rem;
+        justify-content: space-between;
+        .text-wrapper_5 {
+          width: 1.44rem;
+          height: 2.187rem;
+          margin-right: 1.68rem;
+          .text_7 {
+            width: 1.44rem;
+            height: 0.667rem;
+            overflow-wrap: break-word;
+            color: rgba(35, 42, 63, 0.5);
+            font-size: 0.48rem;
+            font-family: Alibaba PuHuiTi-Regular;
+            font-weight: NaN;
+            text-align: center;
+            white-space: nowrap;
+            line-height: 0.48rem;
+          }
+          .text_8 {
+            width: 1.44rem;
+            height: 0.667rem;
+            overflow-wrap: break-word;
+            color: rgba(35, 42, 63, 0.2);
+            font-size: 0.48rem;
+            font-family: Alibaba PuHuiTi-Regular;
+            font-weight: NaN;
+            text-align: center;
+            white-space: nowrap;
+            line-height: 0.48rem;
+            margin-top: 0.854rem;
+          }
+        }
+      }
+    }
+    .text-wrapper_6 {
+      width: 6rem;
+      height: 0.667rem;
+      margin: 0.854rem 0 0.854rem 2.48rem;
+      .text_9 {
+        width: 0.96rem;
+        height: 0.667rem;
+        overflow-wrap: break-word;
+        color: rgba(105, 117, 153, 1);
+        font-size: 0.48rem;
+        font-family: Alibaba PuHuiTi-Regular;
+        font-weight: NaN;
+        text-align: left;
+        white-space: nowrap;
+        line-height: 0.48rem;
+      }
+      .text_10 {
+        width: 0.96rem;
+        height: 0.667rem;
+        overflow-wrap: break-word;
+        color: rgba(0, 162, 160, 1);
+        font-size: 0.48rem;
+        font-family: Alibaba PuHuiTi-Medium;
+        font-weight: 500;
+        text-align: left;
+        white-space: nowrap;
+        line-height: 0.48rem;
+      }
+    }
+  }
+}

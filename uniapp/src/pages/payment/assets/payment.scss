@@ -1,0 +1,155 @@
+.payment-page {
+  background-color: #F6F6F6;
+  min-height: 100vh;
+  padding-top: 20rpx;
+
+  // 支付金额区域
+  .amount-section {
+    background-color: #FFFFFF;
+    margin: 0 20rpx 20rpx;
+    border-radius: 29rpx;
+    padding: 50rpx 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    .amount-label {
+      font-size: 29rpx;
+      color: #616B6B;
+      line-height: 29rpx;
+      margin-bottom: 20rpx;
+    }
+
+    .amount-value-wrapper {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 15rpx;
+
+      .amount-currency {
+        font-size: 44rpx;
+        color: #222929;
+        font-weight: 700;
+        line-height: 44rpx;
+        margin-top: 18rpx;
+      }
+
+      .amount-value {
+        font-size: 69rpx;
+        color: #222929;
+        font-weight: 700;
+        line-height: 69rpx;
+      }
+    }
+
+    .countdown-wrapper {
+      display: flex;
+      align-items: center;
+
+      .countdown-label {
+        font-size: 26rpx;
+        color: #616B6B;
+        line-height: 26rpx;
+      }
+
+      .countdown-value {
+        font-size: 26rpx;
+        color: #F04530;
+        line-height: 26rpx;
+        margin-left: 10rpx;
+      }
+    }
+  }
+
+  // 支付明细区域
+  .detail-section {
+    background-color: #FFFFFF;
+    margin: 0 20rpx 20rpx;
+    border-radius: 29rpx;
+    padding: 30rpx;
+
+    .detail-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30rpx;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      .detail-label {
+        font-size: 29rpx;
+        color: #222929;
+        line-height: 29rpx;
+      }
+
+      .detail-value {
+        font-size: 29rpx;
+        color: #222929;
+        font-weight: 500;
+        line-height: 29rpx;
+      }
+    }
+  }
+
+  // 支付方式区域
+  .payway-section {
+    background-color: #FFFFFF;
+    margin: 0 20rpx 20rpx;
+    border-radius: 29rpx;
+    padding: 30rpx;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .payway-label {
+      font-size: 29rpx;
+      color: #222929;
+      line-height: 29rpx;
+    }
+
+    .payway-selected {
+      display: flex;
+      align-items: center;
+
+      .payway-icon {
+        width: 35rpx;
+        height: 29rpx;
+        margin-right: 15rpx;
+      }
+
+      .payway-name {
+        font-size: 29rpx;
+        color: #222929;
+        line-height: 29rpx;
+      }
+    }
+  }
+
+  // 立即支付按钮区域
+  .submit-section {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 30rpx 40rpx;
+    padding-bottom: calc(30rpx + env(safe-area-inset-bottom));
+    background-color: #FFFFFF;
+
+    .submit-btn {
+      background-color: #00B6B4;
+      border-radius: 51rpx;
+      height: 102rpx;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      .submit-text {
+        font-size: 36rpx;
+        color: #FFFFFF;
+        font-weight: 500;
+        line-height: 36rpx;
+      }
+    }
+  }
+}

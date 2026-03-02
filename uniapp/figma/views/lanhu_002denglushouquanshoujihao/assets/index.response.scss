@@ -1,0 +1,164 @@
+.page {
+  background-color: rgba(245, 245, 245, 1);
+  position: relative;
+  width: 100vw;
+  height: 219.91vw;
+  overflow: hidden;
+  .box_1 {
+    background-color: rgba(34, 41, 41, 0.3);
+    width: 100vw;
+    height: 152.19vw;
+  }
+  .box_2 {
+    background-color: rgba(255, 255, 255, 1);
+    position: relative;
+    width: 100vw;
+    height: 18.94vw;
+    margin: 48.78vw 0 0 -0.24vw;
+    .box_3 {
+      background-color: rgba(255, 255, 255, 1);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100vw;
+      height: 18.94vw;
+    }
+    .box_4 {
+      background-color: rgba(255, 255, 255, 1);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100vw;
+      height: 18.94vw;
+    }
+  }
+  .box_5 {
+    position: absolute;
+    left: 0;
+    top: 90.3vw;
+    width: 100vw;
+    height: 129.62vw;
+    background: url(./img/FigmaDDSSlicePNG2ccd032b973fae4266e51371ab44cb83.png)
+      100% no-repeat;
+    background-size: 100% 100%;
+    .group_1 {
+      background-color: rgba(255, 255, 255, 1);
+      width: 100vw;
+      height: 23.31vw;
+      margin-top: -90.29vw;
+      .group_2 {
+        background-color: rgba(255, 255, 255, 1);
+        width: 100vw;
+        height: 11.9vw;
+        .text_1 {
+          width: 9.96vw;
+          height: 4.86vw;
+          overflow-wrap: break-word;
+          color: rgba(35, 42, 63, 1);
+          font-size: 3.88vw;
+          letter-spacing: -0.5px;
+          font-family: Alibaba PuHuiTi-Medium;
+          font-weight: 500;
+          text-align: center;
+          white-space: nowrap;
+          line-height: 4.86vw;
+          margin: 3.39vw 0 0 5.33vw;
+        }
+        .section_1 {
+          background-color: rgba(35, 42, 63, 1);
+          width: 4.37vw;
+          height: 3.16vw;
+          margin: 4.36vw 0 0 57.28vw;
+        }
+        .section_2 {
+          background-color: rgba(35, 42, 63, 1);
+          border-radius: 1px;
+          width: 3.89vw;
+          height: 2.92vw;
+          margin: 4.61vw 0 0 2.18vw;
+        }
+        .thumbnail_1 {
+          width: 3.4vw;
+          height: 2.43vw;
+          margin: 7.52vw 0 0 1.69vw;
+        }
+        .text_2 {
+          width: 7.53vw;
+          height: 4.86vw;
+          overflow-wrap: break-word;
+          color: rgba(35, 42, 63, 1);
+          font-size: 3.88vw;
+          letter-spacing: -0.5px;
+          font-family: Alibaba PuHuiTi-Medium;
+          font-weight: 500;
+          text-align: center;
+          white-space: nowrap;
+          line-height: 4.86vw;
+          margin: 3.39vw 5.09vw 0 -0.72vw;
+        }
+      }
+      .group_3 {
+        width: 52.67vw;
+        height: 8.74vw;
+        margin: 0.72vw 0 1.94vw 45.14vw;
+        .text_3 {
+          width: 9.71vw;
+          height: 6.56vw;
+          overflow-wrap: break-word;
+          color: rgba(35, 42, 63, 1);
+          font-size: 4.85vw;
+          font-family: Alibaba PuHuiTi-Medium;
+          font-weight: 500;
+          text-align: center;
+          white-space: nowrap;
+          line-height: 4.86vw;
+          margin-top: 1.22vw;
+        }
+        .image_1 {
+          width: 26.7vw;
+          height: 8.74vw;
+        }
+      }
+    }
+    .group_4 {
+      width: 100vw;
+      height: 196.85vw;
+      margin-bottom: 0.25vw;
+      .box_6 {
+        width: 64.08vw;
+        height: 7.29vw;
+        margin: 75.48vw 0 0 6.31vw;
+        .image-wrapper_1 {
+          background-color: rgba(0, 181, 180, 1);
+          border-radius: 50px;
+          height: 7.29vw;
+          width: 7.29vw;
+          .image_2 {
+            width: 5.34vw;
+            height: 2.92vw;
+            margin: 2.42vw 0 0 1.21vw;
+          }
+        }
+        .group_5 {
+          background-color: rgba(246, 246, 246, 1);
+          width: 31.32vw;
+          height: 6.07vw;
+          margin: 0.48vw 0 0 1.21vw;
+        }
+        .text_4 {
+          width: 55.1vw;
+          height: 6.56vw;
+          overflow-wrap: break-word;
+          color: rgba(34, 41, 41, 1);
+          font-size: 4.85vw;
+          font-family: Alibaba PuHuiTi-Medium;
+          font-weight: 500;
+          text-align: left;
+          white-space: nowrap;
+          line-height: 4.86vw;
+          margin: 0.24vw 0 0 -30.82vw;
+        }
+      }
+    }
+  }
+}

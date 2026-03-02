@@ -1,0 +1,180 @@
+.page {
+  background-color: rgba(255, 255, 255, 1);
+  position: relative;
+  width: 412px;
+  height: 906px;
+  overflow: hidden;
+  .box_1 {
+    background-color: rgba(255, 255, 255, 1);
+    width: 412px;
+    height: 96px;
+    .section_1 {
+      background-color: rgba(255, 255, 255, 1);
+      width: 412px;
+      height: 49px;
+      .text_1 {
+        width: 41px;
+        height: 20px;
+        overflow-wrap: break-word;
+        color: rgba(35, 42, 63, 1);
+        font-size: 16px;
+        letter-spacing: -0.5px;
+        font-family: Alibaba PuHuiTi-Medium;
+        font-weight: 500;
+        text-align: center;
+        white-space: nowrap;
+        line-height: 20px;
+        margin: 14px 0 0 22px;
+      }
+      .box_2 {
+        background-color: rgba(35, 42, 63, 1);
+        width: 18px;
+        height: 13px;
+        margin: 18px 0 0 236px;
+      }
+      .box_3 {
+        background-color: rgba(35, 42, 63, 1);
+        border-radius: 1px;
+        width: 16px;
+        height: 12px;
+        margin: 19px 0 0 9px;
+      }
+      .thumbnail_1 {
+        width: 14px;
+        height: 10px;
+        margin: 31px 0 0 7px;
+      }
+      .text_2 {
+        width: 31px;
+        height: 20px;
+        overflow-wrap: break-word;
+        color: rgba(35, 42, 63, 1);
+        font-size: 16px;
+        letter-spacing: -0.5px;
+        font-family: Alibaba PuHuiTi-Medium;
+        font-weight: 500;
+        text-align: center;
+        white-space: nowrap;
+        line-height: 20px;
+        margin: 14px 21px 0 -3px;
+      }
+    }
+    .section_2 {
+      width: 386px;
+      height: 36px;
+      margin: 3px 0 8px 17px;
+      .box_4 {
+        border-radius: 1px;
+        width: 8px;
+        height: 15px;
+        border: 3px solid rgba(35, 42, 63, 1);
+        margin-top: 11px;
+      }
+      .text_3 {
+        width: 60px;
+        height: 27px;
+        overflow-wrap: break-word;
+        color: rgba(35, 42, 63, 1);
+        font-size: 20px;
+        font-family: Alibaba PuHuiTi-Medium;
+        font-weight: 500;
+        text-align: center;
+        white-space: nowrap;
+        line-height: 20px;
+        margin: 5px 0 0 151px;
+      }
+      .image_1 {
+        width: 110px;
+        height: 36px;
+        margin-left: 57px;
+      }
+    }
+  }
+  .box_5 {
+    position: relative;
+    width: 412px;
+    height: 811px;
+    margin-bottom: 1px;
+    .block_1 {
+      width: 40px;
+      height: 17px;
+      margin: 254px 0 0 208px;
+      .section_3 {
+        width: 6px;
+        height: 11px;
+        border: 8px gradient;
+        margin-top: 6px;
+      }
+      .image_2 {
+        width: 24px;
+        height: 17px;
+        border: 8px gradient;
+      }
+    }
+    .block_2 {
+      height: 82px;
+      background: url(./img/FigmaDDSSlicePNG7cc389c5950f436946f4ae3c1ee1269e.png)
+        100% no-repeat;
+      background-size: 100% 100%;
+      width: 113px;
+      margin: 28px 0 0 164px;
+      .block_3 {
+        border-radius: 6px;
+        width: 75px;
+        height: 94px;
+        border: 2px gradient;
+        margin: -15px 0 0 23px;
+      }
+    }
+    .text_4 {
+      width: 237px;
+      height: 22px;
+      overflow-wrap: break-word;
+      color: rgba(102, 102, 102, 1);
+      font-size: 16px;
+      font-family: Alibaba PuHuiTi-Regular;
+      font-weight: NaN;
+      text-align: left;
+      white-space: nowrap;
+      line-height: 16px;
+      margin: 24px 0 384px 88px;
+    }
+    .block_4 {
+      background-color: rgba(255, 255, 255, 1);
+      border-radius: 6px;
+      height: 83px;
+      width: 126px;
+      position: absolute;
+      left: 137px;
+      top: 297px;
+      .section_4 {
+        width: 126px;
+        height: 83px;
+        background: url(./img/FigmaDDSSlicePNGf1a07dfc78d0c71237061ee7bf51c419.png)
+          100% no-repeat;
+        background-size: 100% 100%;
+        .section_5 {
+          background-color: rgba(196, 243, 240, 1);
+          border-radius: 50%;
+          width: 6px;
+          height: 6px;
+          margin: 5px 0 0 13px;
+        }
+        .section_6 {
+          background-color: rgba(196, 243, 240, 1);
+          border-radius: 50%;
+          width: 6px;
+          height: 6px;
+          margin: 5px 97px 0 4px;
+        }
+      }
+    }
+    .block_5 {
+      position: absolute;
+      left: 131px;
+      top: 240px;
+      width: 150px;
+      height: 150px;
+    }
+  }
+}

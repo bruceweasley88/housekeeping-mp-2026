@@ -1,0 +1,164 @@
+.page {
+  background-color: rgba(245, 245, 245, 1);
+  position: relative;
+  width: 412px;
+  height: 906px;
+  overflow: hidden;
+  .box_1 {
+    background-color: rgba(34, 41, 41, 0.3);
+    width: 412px;
+    height: 627px;
+  }
+  .box_2 {
+    background-color: rgba(255, 255, 255, 1);
+    position: relative;
+    width: 412px;
+    height: 78px;
+    margin: 201px 0 0 -1px;
+    .box_3 {
+      background-color: rgba(255, 255, 255, 1);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 412px;
+      height: 78px;
+    }
+    .box_4 {
+      background-color: rgba(255, 255, 255, 1);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 412px;
+      height: 78px;
+    }
+  }
+  .box_5 {
+    position: absolute;
+    left: 0;
+    top: 372px;
+    width: 412px;
+    height: 534px;
+    background: url(./img/FigmaDDSSlicePNG2ccd032b973fae4266e51371ab44cb83.png)
+      100% no-repeat;
+    background-size: 100% 100%;
+    .group_1 {
+      background-color: rgba(255, 255, 255, 1);
+      width: 412px;
+      height: 96px;
+      margin-top: -372px;
+      .group_2 {
+        background-color: rgba(255, 255, 255, 1);
+        width: 412px;
+        height: 49px;
+        .text_1 {
+          width: 41px;
+          height: 20px;
+          overflow-wrap: break-word;
+          color: rgba(35, 42, 63, 1);
+          font-size: 16px;
+          letter-spacing: -0.5px;
+          font-family: Alibaba PuHuiTi-Medium;
+          font-weight: 500;
+          text-align: center;
+          white-space: nowrap;
+          line-height: 20px;
+          margin: 14px 0 0 22px;
+        }
+        .section_1 {
+          background-color: rgba(35, 42, 63, 1);
+          width: 18px;
+          height: 13px;
+          margin: 18px 0 0 236px;
+        }
+        .section_2 {
+          background-color: rgba(35, 42, 63, 1);
+          border-radius: 1px;
+          width: 16px;
+          height: 12px;
+          margin: 19px 0 0 9px;
+        }
+        .thumbnail_1 {
+          width: 14px;
+          height: 10px;
+          margin: 31px 0 0 7px;
+        }
+        .text_2 {
+          width: 31px;
+          height: 20px;
+          overflow-wrap: break-word;
+          color: rgba(35, 42, 63, 1);
+          font-size: 16px;
+          letter-spacing: -0.5px;
+          font-family: Alibaba PuHuiTi-Medium;
+          font-weight: 500;
+          text-align: center;
+          white-space: nowrap;
+          line-height: 20px;
+          margin: 14px 21px 0 -3px;
+        }
+      }
+      .group_3 {
+        width: 217px;
+        height: 36px;
+        margin: 3px 0 8px 186px;
+        .text_3 {
+          width: 40px;
+          height: 27px;
+          overflow-wrap: break-word;
+          color: rgba(35, 42, 63, 1);
+          font-size: 20px;
+          font-family: Alibaba PuHuiTi-Medium;
+          font-weight: 500;
+          text-align: center;
+          white-space: nowrap;
+          line-height: 20px;
+          margin-top: 5px;
+        }
+        .image_1 {
+          width: 110px;
+          height: 36px;
+        }
+      }
+    }
+    .group_4 {
+      width: 412px;
+      height: 811px;
+      margin-bottom: 1px;
+      .box_6 {
+        width: 264px;
+        height: 30px;
+        margin: 311px 0 0 26px;
+        .image-wrapper_1 {
+          background-color: rgba(0, 181, 180, 1);
+          border-radius: 50px;
+          height: 30px;
+          width: 30px;
+          .image_2 {
+            width: 22px;
+            height: 12px;
+            margin: 10px 0 0 5px;
+          }
+        }
+        .group_5 {
+          background-color: rgba(246, 246, 246, 1);
+          width: 129px;
+          height: 25px;
+          margin: 2px 0 0 5px;
+        }
+        .text_4 {
+          width: 227px;
+          height: 27px;
+          overflow-wrap: break-word;
+          color: rgba(34, 41, 41, 1);
+          font-size: 20px;
+          font-family: Alibaba PuHuiTi-Medium;
+          font-weight: 500;
+          text-align: left;
+          white-space: nowrap;
+          line-height: 20px;
+          margin: 1px 0 0 -127px;
+        }
+      }
+    }
+  }
+}
