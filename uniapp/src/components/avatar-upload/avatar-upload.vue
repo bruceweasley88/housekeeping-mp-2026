@@ -23,7 +23,7 @@
 import { uploadImage } from '@/api/app'
 import { useUserStore } from '@/stores/user'
 import { addUnit } from '@/utils/util'
-import { isBoolean } from 'lodash'
+import { isBoolean } from 'lodash-es'
 import { computed, CSSProperties, onUnmounted } from 'vue'
 
 const props = defineProps({

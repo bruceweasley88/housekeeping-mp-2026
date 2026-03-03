@@ -253,6 +253,42 @@
 				"meta": {
                     "auth": true
                 }
+			},
+			{
+				"path": "pages/my-bill/my-bill",
+				"style": {
+					"navigationBarTitleText": "我的账单"
+				}
+			},
+			{
+				"path": "pages/my-profile/my-profile",
+				"style": {
+                    "navigationBarTitleText": "我的资料"
+                }
+            },
+			{
+				"path": "pages/add-community/add-community",
+				"style": {
+					"navigationBarTitleText": "新增小区"
+				}
+			},
+			{
+				"path": "pages/about-us/about-us",
+				"style": {
+					"navigationBarTitleText": "关于我们"
+				}
+			},
+			{
+				"path": "pages/upload-bankcard/upload-bankcard",
+				"style": {
+					"navigationBarTitleText": "上传银行卡"
+				}
+			},
+			{
+				"path": "pages/owner-verify/owner-verify",
+				"style": {
+					"navigationBarTitleText": "业主认证"
+				}
 			}
 		]
 	}],
