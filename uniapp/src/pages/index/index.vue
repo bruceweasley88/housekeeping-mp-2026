@@ -1,31 +1,16 @@
 <template>
-    <page-meta :page-style="$theme.pageStyle">
-        <!-- #ifndef H5 -->
-        <navigation-bar
-            :front-color="$theme.navColor"
-            :background-color="$theme.navBgColor"
-        />
-        <!-- #endif -->
-    </page-meta>
     <view class="index">
         <!-- 顶部地址栏 -->
         <view class="address-bar">
-            <image class="address-icon" src="/static/index_page/icon_addressb@2x.png" mode="aspectFit"/>
+            <image class="address-icon" src="/static/index_page/icon_addressb@2x.png" mode="aspectFit" />
             <text class="address-text">新港东琶洲新村</text>
             <text class="address-arrow">></text>
         </view>
 
         <!-- 轮播海报 -->
         <view class="banner-wrapper" v-if="bannerContent?.data?.length && bannerContent?.enabled">
-            <l-swiper
-                :content="bannerContent"
-                height="200"
-                :circular="true"
-                :effect3d="false"
-                borderRadius="29"
-                interval="7000"
-                bgColor="transparent"
-            />
+            <l-swiper :content="bannerContent" height="200" :circular="true" :effect3d="false" borderRadius="29"
+                interval="7000" bgColor="transparent" />
         </view>
 
         <!-- 需求流程 -->
@@ -51,35 +36,35 @@
         <view class="category-section">
             <view class="category-grid">
                 <view class="category-item">
-                    <image class="category-icon" src="/static/index_page/icon_all@2x.png" mode="aspectFit"/>
+                    <image class="category-icon" src="/static/index_page/icon_all@2x.png" mode="aspectFit" />
                     <text class="category-name">全部需求</text>
                 </view>
                 <view class="category-item">
-                    <image class="category-icon" src="/static/index_page/icon_soft@2x.png" mode="aspectFit"/>
+                    <image class="category-icon" src="/static/index_page/icon_soft@2x.png" mode="aspectFit" />
                     <text class="category-name">轻需求</text>
                 </view>
                 <view class="category-item">
-                    <image class="category-icon" src="/static/index_page/icon_car@2x.png" mode="aspectFit"/>
+                    <image class="category-icon" src="/static/index_page/icon_car@2x.png" mode="aspectFit" />
                     <text class="category-name">接送需求</text>
                 </view>
                 <view class="category-item">
-                    <image class="category-icon" src="/static/index_page/icon_repair@2x.png" mode="aspectFit"/>
+                    <image class="category-icon" src="/static/index_page/icon_repair@2x.png" mode="aspectFit" />
                     <text class="category-name">维修需求</text>
                 </view>
                 <view class="category-item">
-                    <image class="category-icon" src="/static/index_page/icon_keep@2x.png" mode="aspectFit"/>
+                    <image class="category-icon" src="/static/index_page/icon_keep@2x.png" mode="aspectFit" />
                     <text class="category-name">陪伴需求</text>
                 </view>
                 <view class="category-item">
-                    <image class="category-icon" src="/static/index_page/icon_buy@2x.png" mode="aspectFit"/>
+                    <image class="category-icon" src="/static/index_page/icon_buy@2x.png" mode="aspectFit" />
                     <text class="category-name">物品交易</text>
                 </view>
                 <view class="category-item">
-                    <image class="category-icon" src="/static/index_page/icon_clean@2x.png" mode="aspectFit"/>
+                    <image class="category-icon" src="/static/index_page/icon_clean@2x.png" mode="aspectFit" />
                     <text class="category-name">家政服务</text>
                 </view>
                 <view class="category-item">
-                    <image class="category-icon" src="/static/index_page/icon_other@2x.png" mode="aspectFit"/>
+                    <image class="category-icon" src="/static/index_page/icon_other@2x.png" mode="aspectFit" />
                     <text class="category-name">其他需求</text>
                 </view>
             </view>
@@ -88,18 +73,10 @@
         <!-- 最新需求 -->
         <view class="demand-section">
             <text class="section-title">最新需求</text>
-            <demand-card
-                tag="紧急"
-                title="小三数学家教2小时"
-                location="保利天悦A10"
-                description="需要找小学三年级数学家教，周六日两天晚上19:00-21:00上课，合适的可长期…"
-                price="300"
-                priceUnit="元/小时"
-                image="/static/index_page/img_demand_1.png"
-                username="小伟妈妈"
-                publishTime="发布于2026.01.02 12:00"
-                @action="handleTakeTask"
-            />
+            <demand-card tag="紧急" title="小三数学家教2小时" location="保利天悦A10"
+                description="需要找小学三年级数学家教，周六日两天晚上19:00-21:00上课，合适的可长期…" price="300" priceUnit="元/小时"
+                image="/static/index_page/img_demand_1.png" username="小伟妈妈" publishTime="发布于2026.01.02 12:00"
+                @action="handleTakeTask" />
         </view>
 
         <!--  #ifdef MP  -->
@@ -108,16 +85,16 @@
         <!--  #endif  -->
 
         <!-- 登录弹窗 -->
-        <login-popup v-model:show="showLogin" @confirm="handleLoginConfirm" @cancel="handleLoginCancel"/>
+        <login-popup v-model:show="showLogin" @confirm="handleLoginConfirm" @cancel="handleLoginCancel" />
 
-        <tabbar/>
+        <tabbar />
     </view>
 </template>
 
 <script setup lang="ts">
-import {getIndex} from '@/api/shop'
-import {onLoad} from "@dcloudio/uni-app";
-import {computed, reactive, ref} from 'vue'
+import { getIndex } from '@/api/shop'
+import { onLoad } from "@dcloudio/uni-app";
+import { computed, reactive, ref } from 'vue'
 import LSwiper from '@/components/l-swiper/l-swiper.vue'
 
 // #ifdef MP
@@ -252,7 +229,7 @@ const handleTakeTask = () => {
         align-items: center;
         flex-wrap: wrap;
         gap: 8rpx;
-        margin-top: -10rpx;
+        margin-top: -28rpx;
     }
 
     .flow-label-placeholder {
@@ -306,6 +283,8 @@ const handleTakeTask = () => {
     .category-grid {
         display: flex;
         flex-wrap: wrap;
+        position: relative;
+        top: 10rpx;
     }
 
     .category-item {

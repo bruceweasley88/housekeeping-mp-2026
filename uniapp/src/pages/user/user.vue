@@ -1,61 +1,367 @@
 <template>
-    <page-meta :page-style="$theme.pageStyle">
-        <!-- #ifndef H5 -->
-        <navigation-bar
-            :front-color="$theme.navColor"
-            :background-color="$theme.navBgColor"
-        />
-        <!-- #endif -->
-    </page-meta>
-    <view class="user">
-        <view v-for="(item, index) in state.pages" :key="index">
-            <template v-if="item.name == 'user-info'">
-                <w-user-info
-                    :pageMeta="state.meta"
-                    :content="item.content"
-                    :styles="item.styles"
-                    :user="userInfo"
-                    :is-login="isLogin"
+    <view class="user-page">
+        <!-- 顶部背景区域 -->
+        <view class="header-section">
+            <!-- 用户信息 -->
+            <view class="user-info">
+                <image
+                    class="avatar"
+                    :src="userInfo.avatar || '/static/images/user/default_avatar.png'"
+                    mode="aspectFill"
                 />
-            </template>
-            <template v-if="item.name == 'my-service'">
-                <w-my-service :content="item.content" :styles="item.styles" />
-            </template>
-            <template v-if="item.name == 'user-banner'">
-                <w-user-banner :content="item.content" :styles="item.styles" />
-            </template>
+                <view class="user-meta">
+                    <text class="nickname">{{ userInfo.nickname || '未登录' }}</text>
+                    <view class="certified-tag">
+                        <text class="certified-text">已认证业主</text>
+                    </view>
+                </view>
+            </view>
+
+            <!-- 账单卡片 -->
+            <view class="bill-card">
+                <view class="bill-header">
+                    <text class="bill-title">我的账单</text>
+                    <view class="bill-detail" @click="goToBill">
+                        <text class="detail-text">账单详情</text>
+                        <image class="arrow-icon" src="./assets/img/icon_arrow_right.png" mode="aspectFit" />
+                    </view>
+                </view>
+                <view class="bill-content">
+                    <view class="income-section">
+                        <text class="label">我的收入（元）</text>
+                        <view class="amount-row">
+                            <text class="amount">445.00</text>
+                            <view class="withdraw-btn" @click="goToWallet">
+                                <text class="withdraw-text">去提现</text>
+                                <image class="arrow-white" src="./assets/img/icon_arrow_white.png" mode="aspectFit" />
+                            </view>
+                        </view>
+                    </view>
+                    <view class="expense-section">
+                        <text class="label">我的支出（元）</text>
+                        <text class="amount">0.00</text>
+                    </view>
+                </view>
+            </view>
         </view>
+
+        <!-- 设置列表 -->
+        <view class="settings-section">
+            <text class="section-title">我的设置</text>
+            <view class="settings-list">
+                <view class="setting-item" @click="goToProfile">
+                    <image class="setting-icon" src="./assets/img/icon_profile.png" mode="aspectFit" />
+                    <text class="setting-text">我的资料</text>
+                    <image class="arrow-icon" src="./assets/img/icon_arrow_right.png" mode="aspectFit" />
+                </view>
+                <view class="setting-item" @click="goToAddCommunity">
+                    <view class="icon-placeholder community-icon"></view>
+                    <text class="setting-text">新增小区</text>
+                    <image class="arrow-icon" src="./assets/img/icon_arrow_right.png" mode="aspectFit" />
+                </view>
+                <view class="setting-item" @click="goToOwnerVerify">
+                    <image class="setting-icon" src="./assets/img/icon_verify.png" mode="aspectFit" />
+                    <text class="setting-text">业主认证</text>
+                    <image class="arrow-icon" src="./assets/img/icon_arrow_right.png" mode="aspectFit" />
+                </view>
+                <view class="setting-item" @click="goToAboutUs">
+                    <view class="icon-placeholder about-icon"></view>
+                    <text class="setting-text">关于我们</text>
+                    <image class="arrow-icon" src="./assets/img/icon_arrow_right.png" mode="aspectFit" />
+                </view>
+                <view class="setting-item" @click="goToCustomerService">
+                    <view class="icon-placeholder service-icon"></view>
+                    <text class="setting-text">联系客服</text>
+                    <image class="arrow-icon" src="./assets/img/icon_arrow_right.png" mode="aspectFit" />
+                </view>
+            </view>
+        </view>
+
         <tabbar />
     </view>
 </template>
 
 <script setup lang="ts">
-import { getDecorate } from '@/api/shop'
 import { useUserStore } from '@/stores/user'
 import { onShow } from '@dcloudio/uni-app'
 import { storeToRefs } from 'pinia'
-import { reactive } from 'vue'
-const state = reactive<{
-    meta: any[]
-    pages: any[]
-}>({
-    meta: [],
-    pages: []
-})
-const getData = async () => {
-    const data = await getDecorate({ id: 2 })
-    state.meta = JSON.parse(data.meta)
-    state.pages = JSON.parse(data.data)
-    uni.setNavigationBarTitle({
-        title: state.meta[0].content.title
-    })
-}
+
 const userStore = useUserStore()
-const { userInfo, isLogin } = storeToRefs(userStore)
+const { userInfo } = storeToRefs(userStore)
+
 onShow(() => {
     userStore.getUser()
 })
-getData()
+
+// 跳转账单详情
+const goToBill = () => {
+    uni.navigateTo({
+        url: '/packages/pages/my-bill/my-bill'
+    })
+}
+
+// 跳转钱包/提现
+const goToWallet = () => {
+    uni.navigateTo({
+        url: '/packages/pages/user_wallet/user_wallet'
+    })
+}
+
+// 跳转我的资料
+const goToProfile = () => {
+    uni.navigateTo({
+        url: '/packages/pages/my-profile/my-profile'
+    })
+}
+
+// 跳转新增小区
+const goToAddCommunity = () => {
+    uni.navigateTo({
+        url: '/packages/pages/add-community/add-community'
+    })
+}
+
+// 跳转业主认证
+const goToOwnerVerify = () => {
+    uni.navigateTo({
+        url: '/packages/pages/owner-verify/owner-verify'
+    })
+}
+
+// 跳转关于我们
+const goToAboutUs = () => {
+    uni.navigateTo({
+        url: '/packages/pages/about-us/about-us'
+    })
+}
+
+// 跳转联系客服
+const goToCustomerService = () => {
+    uni.navigateTo({
+        url: '/pages/customer_service/customer_service'
+    })
+}
 </script>
 
-<style></style>
+<style lang="scss" scoped>
+.user-page {
+    min-height: 100vh;
+    background: linear-gradient( 90deg, #C3FBEF 0%, #C0F6FD 100%);
+    padding-bottom: calc(120rpx + env(safe-area-inset-bottom));
+}
+
+// 顶部区域
+.header-section {
+    padding: 170rpx 30rpx 0;
+}
+
+// 用户信息
+.user-info {
+    display: flex;
+    align-items: center;
+    margin-bottom: 60rpx;
+
+    .avatar {
+        width: 110rpx;
+        height: 110rpx;
+        border-radius: 50%;
+        margin-right: 24rpx;
+        background-color: #fff;
+    }
+
+    .user-meta {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .nickname {
+        font-size: 36rpx;
+        font-weight: 500;
+        color: #222929;
+        margin-bottom: 12rpx;
+    }
+
+    .certified-tag {
+        background-color: #FF7E22;
+        border-radius: 8rpx;
+        padding: 4rpx 12rpx;
+        align-self: flex-start;
+
+        .certified-text {
+            font-size: 24rpx;
+            color: #fff;
+        }
+    }
+}
+
+// 账单卡片
+.bill-card {
+    background-color: #fff;
+    border-radius: 24rpx;
+    padding: 30rpx;
+    margin-bottom: 30rpx;
+
+    .bill-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30rpx;
+
+        .bill-title {
+            font-size: 32rpx;
+            font-weight: 500;
+            color: #222929;
+        }
+
+        .bill-detail {
+            display: flex;
+            align-items: center;
+
+            .detail-text {
+                font-size: 26rpx;
+                color: #9CA6A6;
+                margin-right: 8rpx;
+            }
+
+            .arrow-icon {
+                width: 10rpx;
+                height: 16rpx;
+            }
+        }
+    }
+
+    .bill-content {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .income-section {
+        flex: 1;
+
+        .label {
+            display: block;
+            font-size: 28rpx;
+            color: #616B6B;
+            margin-bottom: 16rpx;
+        }
+
+        .amount-row {
+            display: flex;
+            align-items: center;
+        }
+
+        .amount {
+            font-size: 40rpx;
+            font-weight: 500;
+            color: #222929;
+            margin-right: 20rpx;
+        }
+
+        .withdraw-btn {
+            display: flex;
+            align-items: center;
+            background-color: #00B6B4;
+            border-radius: 24rpx;
+            padding: 8rpx 16rpx;
+
+            .withdraw-text {
+                font-size: 22rpx;
+                color: #fff;
+                margin-right: 6rpx;
+            }
+
+            .arrow-white {
+                width: 10rpx;
+                height: 16rpx;
+            }
+        }
+    }
+
+    .expense-section {
+        width: 200rpx;
+
+        .label {
+            display: block;
+            font-size: 28rpx;
+            color: #616B6B;
+            margin-bottom: 16rpx;
+        }
+
+        .amount {
+            font-size: 40rpx;
+            font-weight: 500;
+            color: #222929;
+        }
+    }
+}
+
+// 设置区域
+.settings-section {
+    padding: 0 30rpx;
+
+    .section-title {
+        display: block;
+        font-size: 32rpx;
+        font-weight: 500;
+        color: #222929;
+        margin-bottom: 24rpx;
+        margin-left: 10rpx;
+    }
+}
+
+// 设置列表
+.settings-list {
+    background-color: #fff;
+    border-radius: 24rpx;
+    padding: 0 30rpx;
+
+    .setting-item {
+        display: flex;
+        align-items: center;
+        height: 100rpx;
+        border-bottom: 1rpx solid #F0F0F0;
+
+        &:last-child {
+            border-bottom: none;
+        }
+
+        .setting-icon {
+            width: 40rpx;
+            height: 40rpx;
+            margin-right: 24rpx;
+        }
+
+        .icon-placeholder {
+            width: 40rpx;
+            height: 40rpx;
+            margin-right: 24rpx;
+            border-radius: 8rpx;
+
+            &.community-icon {
+                border: 2rpx solid #222929;
+            }
+
+            &.about-icon {
+                border: 2rpx solid #222929;
+                border-radius: 50%;
+            }
+
+            &.service-icon {
+                border: 2rpx solid #222929;
+                border-radius: 8rpx;
+            }
+        }
+
+        .setting-text {
+            flex: 1;
+            font-size: 30rpx;
+            color: #222929;
+        }
+
+        .arrow-icon {
+            width: 10rpx;
+            height: 16rpx;
+        }
+    }
+}
+</style>

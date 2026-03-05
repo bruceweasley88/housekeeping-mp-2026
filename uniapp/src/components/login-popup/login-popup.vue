@@ -6,19 +6,12 @@
 
             <!-- 头像区域 -->
             <view class="avatar-wrapper">
-                <view class="avatar-box" @click="handleAvatarClick">
-                    <image
-                        v-if="avatar"
-                        class="avatar-image"
-                        :src="avatar"
-                        mode="aspectFill"
-                    />
-                    <view v-else class="avatar-placeholder">
-                        <image class="logo-text" src="/static/images/login/icon_logo_text.png" mode="aspectFit"/>
-                        <image class="logo-subtitle" src="/static/images/login/icon_logo_subtitle.png" mode="aspectFit"/>
-                    </view>
-                    <image class="edit-icon" src="/static/images/login/icon_edit.png" mode="aspectFit"/>
-                </view>
+                <avatar-upload
+                    v-model="avatarUrl"
+                    :size="164"
+                    round
+                    @update:modelValue="handleAvatarChange"
+                />
             </view>
 
             <!-- 昵称输入 -->
@@ -27,9 +20,9 @@
                 <input
                     class="nickname-input"
                     type="nickname"
-                    v-model="nickname"
+                    :value="nickname"
                     placeholder="请输入你的昵称"
-                    @blur="handleNicknameBlur"
+                    @input="handleNicknameInput"
                 />
             </view>
 
@@ -44,18 +37,29 @@
             </view>
 
             <!-- 确定按钮 -->
-            <view class="confirm-btn" @click="handleConfirm">
-                <text class="confirm-text">确定</text>
+            <view
+                class="confirm-btn"
+                :class="{ disabled: loading }"
+                @click="handleConfirm"
+            >
+                <text class="confirm-text">{{ loading ? '提交中...' : '确定' }}</text>
             </view>
 
             <!-- 暂不登录 -->
             <text class="skip-text" @click="handleCancel">暂不登录</text>
+
+            <!-- 测试账号登录（仅在开发环境显示） -->
+            <view v-if="isDev" class="test-login-row">
+                <text class="test-login-text" @click="handleTestLogin">测试账号登录</text>
+            </view>
         </view>
     </u-popup>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
+import { mnpLogin, updateUser, login } from '@/api/account'
+import { useUserStore } from '@/stores/user'
 
 const props = defineProps({
     show: {
@@ -74,7 +78,7 @@ const props = defineProps({
 
 const emit = defineEmits<{
     (event: 'update:show', show: boolean): void
-    (event: 'confirm', value: { avatar: string; nickname: string }): void
+    (event: 'success', data: { token: string }): void
     (event: 'cancel'): void
 }>()
 
@@ -87,71 +91,111 @@ const showPopup = computed({
     }
 })
 
-const avatar = ref('')
+const userStore = useUserStore()
+const isDev = computed(() => process.env.NODE_ENV === 'development')
+const temToken = ref('')
+const avatarUrl = ref('')
 const nickname = ref('')
 const agreed = ref(false)
+const loading = ref(false)
 
-// 头像点击 - 触发头像上传
-const handleAvatarClick = () => {
-    uni.chooseMedia({
-        count: 1,
-        mediaType: ['image'],
-        sourceType: ['album', 'camera'],
-        success: (res) => {
-            const tempFilePath = res.tempFiles[0].tempFilePath
-            // 这里可以调用上传接口，暂时直接使用本地路径
-            avatar.value = tempFilePath
-        }
-    })
+// 组件挂载时自动获取微信登录凭证
+onMounted(async () => {
+    if (!props.show) return
+    await initLogin()
+})
+
+// 监听 show 变化，显示时初始化登录
+watch(() => props.show, async (val) => {
+    if (val && !temToken.value) {
+        await initLogin()
+    }
+})
+
+// 初始化登录，获取临时 token
+const initLogin = async () => {
+    try {
+        const { code } = await uni.login({ provider: 'weixin' })
+        const data = await mnpLogin({ code })
+        temToken.value = data.token
+        // 设置到 store，供 avatar-upload 组件使用
+        userStore.temToken = data.token
+    } catch (error: any) {
+        uni.$u.toast('登录初始化失败，请重试')
+    }
 }
 
-// 昵称输入失焦
-const handleNicknameBlur = (e: any) => {
+// 头像上传成功回调
+const handleAvatarChange = (url: string) => {
+    avatarUrl.value = url
+}
+
+// 昵称输入
+const handleNicknameInput = (e: any) => {
     nickname.value = e.detail.value
 }
 
 // 隐私协议点击
 const handlePrivacyClick = () => {
-    // 跳转到隐私协议页面
     uni.navigateTo({
-        url: '/pages/privacy/privacy'
+        url: '/pages/agreement/agreement?type=privacy'
     })
 }
 
 // 确认提交
-const handleConfirm = () => {
-    if (!avatar.value) {
-        uni.showToast({
-            title: '请选择头像',
-            icon: 'none'
-        })
-        return
-    }
-    if (!nickname.value) {
-        uni.showToast({
-            title: '请输入昵称',
-            icon: 'none'
-        })
+const handleConfirm = async () => {
+    if (!nickname.value.trim()) {
+        uni.$u.toast('请输入昵称')
         return
     }
     if (!agreed.value) {
-        uni.showToast({
-            title: '请阅读并同意隐私协议',
-            icon: 'none'
-        })
+        uni.$u.toast('请阅读并同意隐私协议')
+        return
+    }
+    if (!temToken.value) {
+        uni.$u.toast('登录状态异常，请重试')
         return
     }
 
-    emit('confirm', {
-        avatar: avatar.value,
-        nickname: nickname.value
-    })
+    loading.value = true
+    try {
+        await updateUser({
+            nickname: nickname.value.trim(),
+            avatar: avatarUrl.value
+        }, { token: temToken.value })
+
+        // 正式登录
+        userStore.login(temToken.value)
+        emit('success', { token: temToken.value })
+        showPopup.value = false
+    } catch (error: any) {
+        uni.$u.toast(error || '提交失败')
+    } finally {
+        loading.value = false
+    }
 }
 
 // 暂不登录
 const handleCancel = () => {
     emit('cancel')
     showPopup.value = false
+}
+
+// 测试账号登录（仅在开发环境使用）
+const handleTestLogin = async () => {
+    try {
+        const data = await login({
+            account: 'wx6688',
+            password: 'wx123456',
+            scene: 1  // 账号密码登录
+        })
+        userStore.login(data.token)
+        emit('success', { token: data.token })
+        showPopup.value = false
+        uni.$u.toast('测试账号登录成功')
+    } catch (error: any) {
+        uni.$u.toast(error || '登录失败')
+    }
 }
 </script>
 
@@ -175,52 +219,6 @@ const handleCancel = () => {
     display: flex;
     justify-content: center;
     margin-bottom: 36rpx;
-}
-
-.avatar-box {
-    position: relative;
-    width: 164rpx;
-    height: 164rpx;
-    border-radius: 50%;
-    background: #00B5B4;
-    overflow: visible;
-}
-
-.avatar-image {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-}
-
-.avatar-placeholder {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-
-    .logo-text {
-        width: 118rpx;
-        height: 38rpx;
-    }
-
-    .logo-subtitle {
-        width: 118rpx;
-        height: 18rpx;
-        margin-top: 9rpx;
-    }
-}
-
-.edit-icon {
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    width: 44rpx;
-    height: 44rpx;
-    border-radius: 50%;
-    background: #E4F7F7;
-    border: 4rpx solid #fff;
 }
 
 .nickname-row {
@@ -291,6 +289,10 @@ const handleCancel = () => {
     justify-content: center;
     margin-bottom: 40rpx;
 
+    &.disabled {
+        opacity: 0.6;
+    }
+
     .confirm-text {
         font-size: 36rpx;
         font-weight: 500;
@@ -303,5 +305,16 @@ const handleCancel = () => {
     text-align: center;
     font-size: 28rpx;
     color: #9CA6A6;
+}
+
+.test-login-row {
+    display: flex;
+    justify-content: center;
+    margin-top: 20rpx;
+
+    .test-login-text {
+        font-size: 28rpx;
+        color: #00A2A0;
+    }
 }
 </style>
