@@ -61,30 +61,40 @@ const styles = computed<CSSProperties>(() => {
 })
 
 const chooseAvatar = (e: any) => {
+    console.log('=== chooseAvatar 被触发 ===', e)
     // #ifndef MP-WEIXIN
+    console.log('非小程序环境，跳转到裁剪页面')
     uni.navigateTo({
         url: '/uni_modules/vk-uview-ui/components/u-avatar-cropper/u-avatar-cropper?destWidth=300&rectWidth=200&fileType=jpg'
     })
     // #endif
     // #ifdef MP-WEIXIN
+    console.log('小程序环境，获取 avatarUrl')
     const path = e.detail?.avatarUrl
+    console.log('avatarUrl:', path)
     if (path) {
         uploadImageIng(path)
+    } else {
+        console.log('没有获取到 avatarUrl')
     }
     // #endif
 }
 
 const uploadImageIng = async (file: string) => {
+    console.log('=== uploadImageIng 被调用 ===', file)
     uni.showLoading({
         title: '正在上传中...'
     })
     try {
+        console.log('开始上传图片，temToken:', userStore.temToken)
         const res: any = await uploadImage(file, userStore.temToken!)
         uni.hideLoading()
-        console.log(res)
+        console.log('上传成功，返回结果:', res)
+        console.log('fileKey:', props.fileKey, '值:', res[props.fileKey])
         emit('update:modelValue', res[props.fileKey])
     } catch (error) {
         uni.hideLoading()
+        console.error('上传失败:', error)
         uni.$u.toast(error)
     }
 }

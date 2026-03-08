@@ -14,7 +14,9 @@
 namespace app\api\controller;
 
 
+use app\api\logic\CommunityLogic;
 use app\api\logic\UserLogic;
+use app\api\validate\CommunityValidate;
 use app\api\validate\PasswordValidate;
 use app\api\validate\SetUserInfoValidate;
 use app\api\validate\UserValidate;
@@ -142,6 +144,32 @@ class UserController extends BaseApiController
             return $this->success('绑定成功', [], 1, 1);
         }
         return $this->fail(UserLogic::getError());
+    }
+
+
+    /**
+     * @notes 获取用户地址信息
+     * @return \think\response\Json
+     */
+    public function addressInfo()
+    {
+        $result = CommunityLogic::getAddressInfo($this->userId);
+        return $this->data($result);
+    }
+
+
+    /**
+     * @notes 保存用户地址
+     * @return \think\response\Json
+     */
+    public function addressSave()
+    {
+        $params = (new CommunityValidate())->post()->goCheck('saveAddress');
+        $result = CommunityLogic::saveAddress($this->userId, $params);
+        if ($result === false) {
+            return $this->fail(CommunityLogic::getError());
+        }
+        return $this->success('保存成功', [], 1, 1);
     }
 
 }

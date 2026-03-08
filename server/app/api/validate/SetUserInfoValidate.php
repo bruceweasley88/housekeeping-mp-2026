@@ -49,7 +49,7 @@ class SetUserInfoValidate extends BaseValidate
     protected function checkField($value, $rule, $data)
     {
         $allowField = [
-            'nickname', 'account', 'sex', 'avatar', 'real_name',
+            'nickname', 'account', 'sex', 'avatar', 'real_name', 'mobile',
         ];
 
         if (!in_array($value, $allowField)) {
@@ -63,6 +63,22 @@ class SetUserInfoValidate extends BaseValidate
             ])->findOrEmpty();
             if (!$user->isEmpty()) {
                 return '账号已被使用!';
+            }
+        }
+
+        // 手机号验证
+        if ($value == 'mobile') {
+            // 验证手机号格式
+            if (!preg_match('/^1[3-9]\d{9}$/', $data['value'])) {
+                return '手机号格式错误';
+            }
+            // 检查手机号是否已被其他用户使用
+            $user = User::where([
+                ['mobile', '=', $data['value']],
+                ['id', '<>', $data['id']]
+            ])->findOrEmpty();
+            if (!$user->isEmpty()) {
+                return '手机号已被使用!';
             }
         }
 

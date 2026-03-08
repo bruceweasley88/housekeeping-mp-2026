@@ -11,10 +11,10 @@
         <!-- 表单区域 -->
         <view class="form-section">
             <!-- 所在地 -->
-            <view class="form-item">
+            <view class="form-item" @click="showRegionPicker = true">
                 <text class="label">所在地</text>
                 <view class="content">
-                    <text class="placeholder">请选择所在地址</text>
+                    <text class="value" :class="{ 'has-value': regionText }">{{ regionText || '请选择所在地址' }}</text>
                     <u-icon name="arrow-right" size="18" color="#CDCDCD" />
                 </view>
             </view>
@@ -51,22 +51,59 @@
             <view class="tips">
                 <text class="tips-text">新增小区需要通过后台审核，审核后将开放</text>
             </view>
-            <view class="submit-btn" @click="handleSubmit">确认申请</view>
+            <view class="submit-btn" :class="{ 'disabled': submitting }" @click="handleSubmit">
+                {{ submitting ? '提交中...' : '确认申请' }}
+            </view>
         </view>
+
+        <!-- 省市区选择器 -->
+        <u-picker
+            mode="region"
+            v-model="showRegionPicker"
+            confirm-color="#00B6B4"
+            @confirm="onRegionConfirm"
+        />
     </view>
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { applyCommunity } from '@/api/community'
 
-// 表单数据
-const address = ref('')
+// 省市区
+const province = ref('')
+const city = ref('')
+const district = ref('')
+const showRegionPicker = ref(false)
+
+// 显示的省市区文本
+const regionText = computed(() => {
+    if (province.value && city.value && district.value) {
+        return `${province.value} ${city.value} ${district.value}`
+    }
+    return ''
+})
+
+// 小区名称
 const communityName = ref('')
 const reason = ref('')
 
+// 提交状态
+const submitting = ref(false)
+
+// 省市区选择确认
+const onRegionConfirm = (e: any) => {
+    province.value = e.province?.name || ''
+    city.value = e.city?.name || ''
+    district.value = e.area?.name || ''
+    showRegionPicker.value = false
+}
+
 // 提交申请
-const handleSubmit = () => {
-    if (!address.value) {
+const handleSubmit = async () => {
+    if (submitting.value) return
+
+    if (!province.value || !city.value || !district.value) {
         uni.showToast({
             title: '请选择所在地址',
             icon: 'none'
@@ -80,18 +117,34 @@ const handleSubmit = () => {
         })
         return
     }
-    if (!reason.value) {
+
+    submitting.value = true
+    try {
+        await applyCommunity({
+            name: communityName.value,
+            province: province.value,
+            city: city.value,
+            district: district.value,
+            address: `${province.value}${city.value}${district.value}` // 可选字段
+        })
+
         uni.showToast({
-            title: '请填写申请理由',
+            title: '申请已提交',
+            icon: 'success'
+        })
+
+        // 返回上一页
+        setTimeout(() => {
+            uni.navigateBack()
+        }, 1500)
+    } catch (e: any) {
+        uni.showToast({
+            title: e.message || '申请失败',
             icon: 'none'
         })
-        return
+    } finally {
+        submitting.value = false
     }
-
-    uni.showToast({
-        title: '申请已提交',
-        icon: 'success'
-    })
 }
 </script>
 
@@ -106,13 +159,15 @@ const handleSubmit = () => {
     display: flex;
     align-items: center;
     padding-top: 51rpx;
+    padding-bottom: 28rpx;
+    border-bottom: 1rpx solid #F5F5F5;
 
     &:first-child {
         padding-top: 56rpx;
     }
 
     .label {
-        width: 130rpx;
+        width: 150rpx;
         font-size: 33rpx;
         font-weight: 500;
         color: #444;
@@ -124,14 +179,16 @@ const handleSubmit = () => {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-left: 67rpx;
-        padding-bottom: 28rpx;
-        border-bottom: 1rpx solid #F5F5F5;
+        margin-left: 20rpx;
     }
 
-    .placeholder {
+    .value {
         font-size: 33rpx;
         color: #CDCDCD;
+
+        &.has-value {
+            color: #222;
+        }
     }
 
     .input {
@@ -173,5 +230,9 @@ const handleSubmit = () => {
     font-size: 36rpx;
     font-weight: 500;
     color: #fff;
+
+    &.disabled {
+        opacity: 0.6;
+    }
 }
 </style>

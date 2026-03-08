@@ -55,22 +55,22 @@
                     <image class="arrow-icon" src="./assets/img/icon_arrow_right.png" mode="aspectFit" />
                 </view>
                 <view class="setting-item" @click="goToAddCommunity">
-                    <view class="icon-placeholder community-icon"></view>
+                    <image class="setting-icon" src="./assets/img/icon_myhouse.png" mode="aspectFit" />
                     <text class="setting-text">新增小区</text>
                     <image class="arrow-icon" src="./assets/img/icon_arrow_right.png" mode="aspectFit" />
                 </view>
                 <view class="setting-item" @click="goToOwnerVerify">
-                    <image class="setting-icon" src="./assets/img/icon_verify.png" mode="aspectFit" />
+                    <image class="setting-icon" src="./assets/img/icon_accredit.png" mode="aspectFit" />
                     <text class="setting-text">业主认证</text>
                     <image class="arrow-icon" src="./assets/img/icon_arrow_right.png" mode="aspectFit" />
                 </view>
                 <view class="setting-item" @click="goToAboutUs">
-                    <view class="icon-placeholder about-icon"></view>
+                    <image class="setting-icon" src="./assets/img/icon_aboutme.png" mode="aspectFit" />
                     <text class="setting-text">关于我们</text>
                     <image class="arrow-icon" src="./assets/img/icon_arrow_right.png" mode="aspectFit" />
                 </view>
                 <view class="setting-item" @click="goToCustomerService">
-                    <view class="icon-placeholder service-icon"></view>
+                    <image class="setting-icon" src="./assets/img/icon_service.png" mode="aspectFit" />
                     <text class="setting-text">联系客服</text>
                     <image class="arrow-icon" src="./assets/img/icon_arrow_right.png" mode="aspectFit" />
                 </view>

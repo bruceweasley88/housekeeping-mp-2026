@@ -44,24 +44,50 @@
         </view>
 
         <!-- 保存按钮 -->
-        <view class="save-btn" @click="handleSave">
-            <text class="save-text">保存地址</text>
+        <view class="save-btn" :class="{ 'disabled': saving }" @click="handleSave">
+            <text class="save-text">{{ saving ? '保存中...' : '保存地址' }}</text>
         </view>
     </view>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
+import { getUserAddress, saveUserAddress } from '@/api/community'
 
+// 小区信息
+const communityId = ref(0)
 const community = ref('')
 const building = ref('')
 const room = ref('')
 
+// 保存状态
+const saving = ref(false)
+
 // 监听小区选择事件
-onMounted(() => {
-    uni.$on('community-selected', (data: { name: string; address: string }) => {
+onMounted(async () => {
+    // 监听小区选择
+    uni.$on('community-selected', (data: { id: number; name: string; address: string }) => {
+        communityId.value = data.id
         community.value = data.name
     })
+
+    // 获取已保存的地址
+    try {
+        const res = await getUserAddress()
+        if (res && res.community_id) {
+            communityId.value = res.community_id
+            community.value = res.community_name || ''
+            building.value = res.building || ''
+            room.value = res.room || ''
+        }
+    } catch (e) {
+        // 未登录或无地址信息，忽略错误
+    }
+})
+
+// 移除事件监听
+onUnmounted(() => {
+    uni.$off('community-selected')
 })
 
 const handleSelectCommunity = () => {
@@ -70,8 +96,10 @@ const handleSelectCommunity = () => {
     })
 }
 
-const handleSave = () => {
-    if (!community.value) {
+const handleSave = async () => {
+    if (saving.value) return
+
+    if (!communityId.value) {
         uni.showToast({
             title: '请选择小区',
             icon: 'none'
@@ -93,18 +121,33 @@ const handleSave = () => {
         return
     }
 
-    // TODO: 保存地址信息
-    uni.showToast({
-        title: '保存成功',
-        icon: 'success'
-    })
-
-    // 返回首页
-    setTimeout(() => {
-        uni.switchTab({
-            url: '/pages/index/index'
+    saving.value = true
+    try {
+        await saveUserAddress({
+            community_id: communityId.value,
+            building: building.value,
+            room: room.value
         })
-    }, 1500)
+
+        uni.showToast({
+            title: '保存成功',
+            icon: 'success'
+        })
+
+        // 返回首页
+        setTimeout(() => {
+            uni.switchTab({
+                url: '/pages/index/index'
+            })
+        }, 1500)
+    } catch (e: any) {
+        uni.showToast({
+            title: e.message || '保存失败',
+            icon: 'none'
+        })
+    } finally {
+        saving.value = false
+    }
 }
 </script>
 
@@ -194,6 +237,10 @@ const handleSave = () => {
     display: flex;
     align-items: center;
     justify-content: center;
+
+    &.disabled {
+        opacity: 0.6;
+    }
 }
 
 .save-text {

@@ -11,13 +11,12 @@
         <!-- 头像区域 -->
         <view class="avatar-section">
             <view class="avatar-wrap">
-                <view class="avatar-inner">
-                    <image
-                        class="avatar-img"
-                        :src="avatar || defaultAvatar"
-                        mode="aspectFill"
-                    />
-                </view>
+                <avatar-upload
+                    v-model="avatar"
+                    file-key="url"
+                    :round="true"
+                    :size="164"
+                />
                 <view class="avatar-border"></view>
                 <view class="camera-btn">
                     <image
@@ -35,7 +34,13 @@
             <view class="form-item">
                 <text class="label">昵称</text>
                 <view class="content">
-                    <text class="value">{{ nickname || '轻松熊' }}</text>
+                    <input
+                        class="input"
+                        v-model="nickname"
+                        type="text"
+                        placeholder="填写您的昵称"
+                        placeholder-class="placeholder-class"
+                    />
                 </view>
             </view>
 
@@ -77,11 +82,11 @@
             </view>
 
             <!-- 地址 -->
-            <view class="form-item address-item">
+            <view class="form-item address-item" @click="handleSelectCommunity">
                 <text class="label">你的地址</text>
                 <view class="content">
-                    <text class="address-value">
-                        广东省广州市海珠区 保利天悦小区A18栋203
+                    <text class="address-value" :class="{ 'placeholder': !addressText }">
+                        {{ addressText || '请选择您的地址' }}
                     </text>
                     <view class="arrow-icon">
                         <u-icon name="arrow-right" size="18" color="#CDCDCD" />
@@ -110,21 +115,70 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
+import { getUserInfo, userEdit } from '@/api/user'
+import { getUserAddress } from '@/api/community'
+import { useUserStore } from '@/stores/user'
 
 // 默认头像（使用占位图）
 const defaultAvatar = './assets/img/avatar-placeholder-1.png'
 
 // 表单数据
 const avatar = ref('')
-const nickname = ref('轻松熊')
-const gender = ref(2) // 1: 男, 2: 女
+const nickname = ref('')
+const gender = ref(1) // 1: 男, 2: 女
 const phone = ref('')
-const address = ref('广东省广州市海珠区 保利天悦小区A18栋203')
-const agreed = ref(false)
+const agreed = ref(true) // 默认勾选隐私协议
+const addressText = ref('')
+
+const userStore = useUserStore()
+
+// 获取用户信息
+const getUser = async () => {
+    const data = await getUserInfo()
+    avatar.value = data.avatar || ''
+    nickname.value = data.nickname || ''
+    // 后端返回的是中文，需要转换为数字
+    gender.value = data.sex === '女' ? 2 : (data.sex === '男' ? 1 : 0)
+    phone.value = data.mobile || ''
+}
+
+// 获取用户地址
+const fetchUserAddress = async () => {
+    try {
+        const res = await getUserAddress()
+        if (res && res.community_name) {
+            // 显示小区名 + 楼号 + 门牌号
+            const parts = [res.community_name]
+            if (res.building) parts.push(res.building)
+            if (res.room) parts.push(res.room)
+            addressText.value = parts.join(' ')
+        }
+    } catch (e) {
+        // 未登录或无地址信息
+        addressText.value = ''
+    }
+}
+
+// 跳转选择小区页面
+const handleSelectCommunity = () => {
+    uni.navigateTo({
+        url: '/pages/select-community/select-community'
+    })
+}
+
+onMounted(() => {
+    getUser()
+})
+
+// 每次显示页面时刷新地址
+onShow(() => {
+    fetchUserAddress()
+})
 
 // 保存
-const handleSave = () => {
+const handleSave = async () => {
     if (!agreed.value) {
         uni.showToast({
             title: '请先同意用户隐私协议',
@@ -132,11 +186,40 @@ const handleSave = () => {
         })
         return
     }
-    uni.showToast({
-        title: '保存成功',
-        icon: 'success'
-    })
+
+    uni.showLoading({ title: '保存中...' })
+
+    try {
+        // 保存头像
+        if (avatar.value) {
+            await userEdit({ field: 'avatar', value: avatar.value })
+        }
+        // 保存昵称
+        if (nickname.value) {
+            await userEdit({ field: 'nickname', value: nickname.value })
+        }
+        // 保存性别
+        await userEdit({ field: 'sex', value: gender.value })
+        // 保存手机号
+        if (phone.value) {
+            await userEdit({ field: 'mobile', value: phone.value })
+        }
+
+        // 刷新用户 store
+        await userStore.getUser()
+
+        uni.hideLoading()
+
+        // 返回上一页
+        uni.navigateBack()
+    } catch (error) {
+        uni.hideLoading()
+    }
 }
+
+onMounted(() => {
+    getUser()
+})
 </script>
 
 <style lang="scss" scoped>
@@ -157,18 +240,11 @@ const handleSave = () => {
     position: relative;
     width: 164rpx;
     height: 164rpx;
-}
 
-.avatar-inner {
-    width: 164rpx;
-    height: 164rpx;
-    border-radius: 50%;
-    overflow: hidden;
-    background-color: #00B5B4;
-
-    .avatar-img {
-        width: 100%;
-        height: 100%;
+    :deep(.avatar-upload) {
+        border-radius: 50% !important;
+        overflow: hidden;
+        background-color: #00B5B4 !important;
     }
 }
 
@@ -197,6 +273,7 @@ const handleSave = () => {
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
+    pointer-events: none;
 
     .camera-icon {
         width: 24rpx;
@@ -281,6 +358,10 @@ const handleSave = () => {
     font-size: 33rpx;
     color: #222;
     line-height: 1.4;
+
+    &.placeholder {
+        color: #CDCDCD;
+    }
 }
 
 .arrow-icon {

@@ -1,9 +1,9 @@
 <template>
     <view class="index">
         <!-- 顶部地址栏 -->
-        <view class="address-bar">
+        <view class="address-bar" @click="handleSelectCommunity">
             <image class="address-icon" src="/static/index_page/icon_addressb@2x.png" mode="aspectFit" />
-            <text class="address-text">新港东琶洲新村</text>
+            <text class="address-text">{{ addressText || '请选择小区' }}</text>
             <text class="address-arrow">></text>
         </view>
 
@@ -93,7 +93,8 @@
 
 <script setup lang="ts">
 import { getIndex } from '@/api/shop'
-import { onLoad } from "@dcloudio/uni-app";
+import { getUserAddress } from '@/api/community'
+import { onLoad, onShow } from "@dcloudio/uni-app";
 import { computed, reactive, ref } from 'vue'
 import LSwiper from '@/components/l-swiper/l-swiper.vue'
 
@@ -112,6 +113,9 @@ const state = reactive<{
     meta: []
 })
 
+// 用户地址信息
+const addressText = ref('')
+
 
 // 获取banner组件的数据
 const bannerContent = computed(() => {
@@ -125,8 +129,35 @@ const getData = async () => {
     state.meta = JSON.parse(data?.page?.meta || '[]')
 }
 
+// 获取用户地址
+const fetchUserAddress = async () => {
+    try {
+        const res = await getUserAddress()
+        if (res && res.community_name) {
+            // 显示小区名 + 楼号 + 门牌号
+            const parts = [res.community_name]
+            if (res.building) parts.push(res.building)
+            if (res.room) parts.push(res.room)
+            addressText.value = parts.join(' ')
+        }
+    } catch (e) {
+        // 未登录或无地址信息
+        addressText.value = ''
+    }
+}
+
 
 onLoad(() => { getData() })
+
+// 每次显示页面时刷新地址
+onShow(() => { fetchUserAddress() })
+
+// 跳转选择小区页面
+const handleSelectCommunity = () => {
+    uni.navigateTo({
+        url: '/pages/select-community/select-community'
+    })
+}
 
 // 登录弹窗
 const showLogin = ref(false)
