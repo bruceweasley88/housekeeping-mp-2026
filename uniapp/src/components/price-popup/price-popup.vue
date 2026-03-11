@@ -36,8 +36,33 @@
 
             <!-- 金额输入区域 -->
             <view class="price-input-area">
-                <!-- 按小时/次数 -->
-                <view class="price-single" v-if="currentType !== 'range'">
+                <!-- 按小时 -->
+                <view class="price-hour" v-if="currentType === 'hour'">
+                    <view class="hour-row">
+                        <text class="price-symbol">¥</text>
+                        <input
+                            class="price-input"
+                            type="digit"
+                            v-model="priceValue"
+                            placeholder="0.00"
+                            placeholder-style="color: #DADADA;"
+                        />
+                        <text class="price-unit">/小时</text>
+                    </view>
+                    <view class="hour-row">
+                        <text class="hour-label">总时长</text>
+                        <input
+                            class="hour-input"
+                            type="digit"
+                            v-model="hoursValue"
+                            placeholder="0"
+                            placeholder-style="color: #DADADA;"
+                        />
+                        <text class="hour-unit">小时</text>
+                    </view>
+                </view>
+                <!-- 按次数 -->
+                <view class="price-single" v-else-if="currentType === 'times'">
                     <text class="price-symbol">¥</text>
                     <input
                         class="price-input"
@@ -46,7 +71,7 @@
                         placeholder="0.00"
                         placeholder-style="color: #DADADA;"
                     />
-                    <text class="price-unit">/{{ currentType === 'hour' ? '小时' : '次' }}</text>
+                    <text class="price-unit">/次</text>
                 </view>
                 <!-- 按范围 -->
                 <view class="price-range" v-else>
@@ -103,6 +128,7 @@ interface Props {
     priceType?: 'hour' | 'times' | 'range'
     minPrice?: number
     maxPrice?: number
+    hours?: number
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -110,7 +136,8 @@ const props = withDefaults(defineProps<Props>(), {
     modelValue: 0,
     priceType: 'hour',
     minPrice: 0,
-    maxPrice: 0
+    maxPrice: 0,
+    hours: 1
 })
 
 const emit = defineEmits<{
@@ -119,6 +146,7 @@ const emit = defineEmits<{
     'update:priceType': [value: string]
     'update:minPrice': [value: number]
     'update:maxPrice': [value: number]
+    'update:hours': [value: number]
     'confirm': []
     'cancel': []
 }>()
@@ -137,6 +165,7 @@ const showPopup = computed({
 const priceValue = ref('80.00')
 const minPriceValue = ref('150.00')
 const maxPriceValue = ref('210.00')
+const hoursValue = ref('1')
 const currentType = ref<'hour' | 'times' | 'range'>(props.priceType)
 
 // 监听 props 变化
@@ -162,6 +191,12 @@ watch(() => props.maxPrice, (val) => {
     }
 })
 
+watch(() => props.hours, (val) => {
+    if (val) {
+        hoursValue.value = val.toString()
+    }
+})
+
 // 切换收费类型
 const handleTypeChange = (type: 'hour' | 'times' | 'range') => {
     currentType.value = type
@@ -184,6 +219,9 @@ const handleConfirm = () => {
     if (currentType.value === 'range') {
         emit('update:minPrice', parseFloat(minPriceValue.value) || 0)
         emit('update:maxPrice', parseFloat(maxPriceValue.value) || 0)
+    } else if (currentType.value === 'hour') {
+        emit('update:modelValue', parseFloat(priceValue.value) || 0)
+        emit('update:hours', parseFloat(hoursValue.value) || 1)
     } else {
         emit('update:modelValue', parseFloat(priceValue.value) || 0)
     }
@@ -259,6 +297,39 @@ const handleConfirm = () => {
 // 金额输入区域
 .price-input-area {
     margin-top: 36rpx;
+}
+
+.price-hour {
+    display: flex;
+    flex-direction: column;
+    gap: 25rpx;
+}
+
+.hour-row {
+    display: flex;
+    align-items: center;
+}
+
+.hour-label {
+    font-size: 29rpx;
+    color: #222929;
+    width: 100rpx;
+}
+
+.hour-input {
+    flex: 1;
+    font-size: 40rpx;
+    font-weight: bold;
+    color: #00A2A0;
+    background: transparent;
+    border: none;
+    padding: 0 10rpx;
+    text-align: center;
+}
+
+.hour-unit {
+    font-size: 29rpx;
+    color: #222929;
 }
 
 .price-single {

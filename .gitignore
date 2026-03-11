@@ -21,4 +21,5 @@ bin-release/
 
 node_modules
 dist
-server/public/mobile/
+server/public/mobile
+server/public/admin

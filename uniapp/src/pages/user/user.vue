@@ -11,8 +11,8 @@
                 />
                 <view class="user-meta">
                     <text class="nickname">{{ userInfo.nickname || '未登录' }}</text>
-                    <view class="certified-tag">
-                        <text class="certified-text">已认证业主</text>
+                    <view class="certified-tag" :class="{ 'not-certified': verifyStatus !== 1 }">
+                        <text class="certified-text">{{ verifyStatus === 1 ? '已认证业主' : '未认证' }}</text>
                     </view>
                 </view>
             </view>
@@ -82,15 +82,27 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { onShow } from '@dcloudio/uni-app'
 import { storeToRefs } from 'pinia'
+import { getUserVerifyDetail } from '@/api/userVerify'
 
 const userStore = useUserStore()
 const { userInfo } = storeToRefs(userStore)
 
-onShow(() => {
+// 认证状态: null=未提交, 0=待审核, 1=已通过, 2=已拒绝
+const verifyStatus = ref<number | null>(null)
+
+onShow(async () => {
     userStore.getUser()
+    // 获取认证状态
+    try {
+        const res = await getUserVerifyDetail()
+        verifyStatus.value = res?.status ?? null
+    } catch (e) {
+        verifyStatus.value = null
+    }
 })
 
 // 跳转账单详情
@@ -186,6 +198,10 @@ const goToCustomerService = () => {
         border-radius: 8rpx;
         padding: 4rpx 12rpx;
         align-self: flex-start;
+
+        &.not-certified {
+            background-color: #9CA6A6;
+        }
 
         .certified-text {
             font-size: 24rpx;

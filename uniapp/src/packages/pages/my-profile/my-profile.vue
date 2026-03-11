@@ -1,12 +1,4 @@
 <template>
-    <page-meta :page-style="$theme.pageStyle">
-        <!-- #ifndef H5 -->
-        <navigation-bar
-            :front-color="$theme.navColor"
-            :background-color="$theme.navBgColor"
-        />
-        <!-- #endif -->
-    </page-meta>
     <view class="my-profile">
         <!-- 头像区域 -->
         <view class="avatar-section">
@@ -303,7 +295,6 @@ onMounted(() => {
         flex: 1;
         display: flex;
         align-items: center;
-        padding-bottom: 36rpx;
         margin-left: 40rpx;
         border-bottom: 1rpx solid #F5F5F5;
     }
@@ -349,7 +340,6 @@ onMounted(() => {
     .content {
         align-items: flex-start;
         padding-top: 8rpx;
-        padding-bottom: 28rpx;
     }
 }
 

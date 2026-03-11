@@ -88,7 +88,7 @@
       <div class="section_7 flex-col justify-center">
         <div class="box_5 flex-row justify-between">
           <div class="text-wrapper_6 flex-col"><span class="text_19">调整金额</span></div>
-          <div class="text-wrapper_7 flex-col"><span class="text_20">需求进行中</span></div>
+          <div class="text-wrapper_7 flex-col"><span class="text_20">确定完成</span></div>
         </div>
       </div>
     </div>

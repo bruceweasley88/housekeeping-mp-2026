@@ -132,10 +132,13 @@ class WebSettingLogic extends BaseLogic
     {
         $serviceContent = clear_file_domain($params['service_content'] ?? '');
         $privacyContent = clear_file_domain($params['privacy_content'] ?? '');
+        $tradeContent = clear_file_domain($params['trade_content'] ?? '');
         ConfigService::set('agreement', 'service_title', $params['service_title'] ?? '');
         ConfigService::set('agreement', 'service_content', $serviceContent);
         ConfigService::set('agreement', 'privacy_title', $params['privacy_title'] ?? '');
         ConfigService::set('agreement', 'privacy_content', $privacyContent);
+        ConfigService::set('agreement', 'trade_title', $params['trade_title'] ?? '');
+        ConfigService::set('agreement', 'trade_content', $tradeContent);
     }
 
 
@@ -152,10 +155,13 @@ class WebSettingLogic extends BaseLogic
             'service_content' => ConfigService::get('agreement', 'service_content'),
             'privacy_title' => ConfigService::get('agreement', 'privacy_title'),
             'privacy_content' => ConfigService::get('agreement', 'privacy_content'),
+            'trade_title' => ConfigService::get('agreement', 'trade_title'),
+            'trade_content' => ConfigService::get('agreement', 'trade_content'),
         ];
 
         $config['service_content'] = get_file_domain($config['service_content']);
         $config['privacy_content'] = get_file_domain($config['privacy_content']);
+        $config['trade_content'] = get_file_domain($config['trade_content']);
 
         return $config;
     }

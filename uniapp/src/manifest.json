@@ -56,7 +56,7 @@
             "es6" : true,
             "minified" : true
         },
-        "__usePrivacyCheck__": true,
+        "__usePrivacyCheck__": false,
         "usingComponents" : true
     },
     "mp-alipay" : {

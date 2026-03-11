@@ -1,9 +1,9 @@
 <template>
     <view class="page">
         <!-- 顶部提示条 -->
-        <view class="tip-bar">
+        <view class="tip-bar" v-if="!isVerified">
             <text class="tip-text">您还未进行业主验证，业主与住户才能发布！</text>
-            <view class="cert-btn">
+            <view class="cert-btn" @click="handleGoVerify">
                 <text class="cert-btn-text">去认证</text>
             </view>
         </view>
@@ -16,11 +16,13 @@
                 <view class="title-input-row">
                     <input
                         class="title-input"
+                        v-model="formData.title"
                         placeholder="简单描述 例:找初三英语家教2小时"
                         placeholder-style="color: #DADADA; font-size: 33rpx;"
                         maxlength="30"
+                        @input="handleTitleInput"
                     />
-                    <text class="char-count">0/30</text>
+                    <text class="char-count">{{ formData.title.length }}/30</text>
                 </view>
             </view>
 
@@ -28,30 +30,16 @@
             <view class="form-item">
                 <view class="type-header">
                     <text class="form-label">需求类型</text>
-                    <text class="type-hint">类型说明</text>
-                    <view class="type-checkbox"></view>
                 </view>
                 <view class="type-grid">
-                    <view class="type-item">
-                        <text class="type-text">轻需求</text>
-                    </view>
-                    <view class="type-item">
-                        <text class="type-text">接送需求</text>
-                    </view>
-                    <view class="type-item">
-                        <text class="type-text">维修需求</text>
-                    </view>
-                    <view class="type-item selected">
-                        <text class="type-text selected">陪伴需求</text>
-                    </view>
-                    <view class="type-item">
-                        <text class="type-text">物品交易</text>
-                    </view>
-                    <view class="type-item">
-                        <text class="type-text">家政服务</text>
-                    </view>
-                    <view class="type-item">
-                        <text class="type-text">其他需求</text>
+                    <view
+                        v-for="item in categoryList"
+                        :key="item.id"
+                        class="type-item"
+                        :class="{ selected: formData.category_id === item.id }"
+                        @click="handleSelectCategory(item.id)"
+                    >
+                        <text class="type-text" :class="{ selected: formData.category_id === item.id }">{{ item.name }}</text>
                     </view>
                 </view>
             </view>
@@ -62,14 +50,14 @@
                 <view class="price-row">
                     <template v-if="priceType === 'range'">
                         <text class="price-symbol">¥</text>
-                        <text class="price-value">{{ minPrice.toFixed(2) }}</text>
+                        <text class="price-value">{{ formData.min_amount.toFixed(2) }}</text>
                         <text class="price-range-text">至</text>
                         <text class="price-symbol">¥</text>
-                        <text class="price-value">{{ maxPrice.toFixed(2) }}</text>
+                        <text class="price-value">{{ formData.max_amount.toFixed(2) }}</text>
                     </template>
                     <template v-else>
                         <text class="price-symbol">¥</text>
-                        <text class="price-value">{{ price.toFixed(2) }}</text>
+                        <text class="price-value">{{ displayPrice.toFixed(2) }}</text>
                         <text class="price-unit">/{{ priceType === 'hour' ? '小时' : '次' }}</text>
                     </template>
                     <view class="price-arrow"></view>
@@ -81,9 +69,10 @@
                 <text class="form-label">需求描述</text>
                 <textarea
                     class="desc-textarea"
+                    v-model="formData.description"
                     placeholder="描述需要帮忙的事请。例如丢垃圾、代买物品、取快递、代关门窗、宠物养护/上门喂养等。描述越清晰越好～"
                     placeholder-style="color: #9CA6A6; font-size: 27rpx;"
-                    :maxlength="200"
+                    :maxlength="500"
                 />
             </view>
 
@@ -93,49 +82,67 @@
                     <text class="form-label">上传照片</text>
                     <text class="upload-hint">例:电器维修部位</text>
                 </view>
-                <view class="upload-box">
-                    <view class="upload-icon">
-                        <view class="upload-icon-add"></view>
-                        <view class="upload-icon-circle"></view>
+                <view class="upload-list">
+                    <view
+                        v-for="(img, index) in formData.images"
+                        :key="index"
+                        class="upload-item"
+                    >
+                        <image class="upload-img" :src="img" mode="aspectFill" />
+                        <view class="upload-delete" @click="handleDeleteImage(index)">
+                            <text class="delete-icon">×</text>
+                        </view>
                     </view>
-                    <text class="upload-text">立即上传</text>
+                    <view
+                        v-if="formData.images.length < 9"
+                        class="upload-box"
+                        @click="handleUpload"
+                    >
+                        <view class="upload-icon">
+                            <view class="upload-icon-add"></view>
+                            <view class="upload-icon-circle"></view>
+                        </view>
+                        <text class="upload-text">立即上传</text>
+                    </view>
                 </view>
             </view>
 
             <!-- 是否紧急发布 -->
-            <view class="switch-item">
+            <view class="switch-item" @click="handleToggleUrgent">
                 <view class="switch-info">
                     <text class="switch-label">是否紧急发布</text>
                     <text class="switch-hint">说明：紧急需求将收取3%的服务费，完成后收取。</text>
                 </view>
-                <view class="switch-off">
-                    <view class="switch-off-inner"></view>
+                <view class="switch-off" :class="{ 'switch-on': formData.is_urgent === 1 }">
+                    <view class="switch-off-inner" :class="{ 'switch-on-inner': formData.is_urgent === 1 }"></view>
                 </view>
             </view>
 
             <!-- 是否提供真实手机号 -->
-            <view class="switch-item">
+            <view class="switch-item" @click="handleToggleShowPhone">
                 <text class="switch-label">是否提供真实手机号</text>
-                <view class="switch-on">
-                    <view class="switch-on-inner"></view>
+                <view class="switch-off" :class="{ 'switch-on': formData.show_phone === 1 }">
+                    <view class="switch-off-inner" :class="{ 'switch-on-inner': formData.show_phone === 1 }"></view>
                 </view>
             </view>
         </scroll-view>
 
         <!-- 底部区域 -->
         <view class="bottom-area">
-            <view class="agreement-row">
-                <view class="agreement-checkbox"></view>
+            <view class="agreement-row" @click="handleToggleAgreement">
+                <view class="agreement-checkbox" :class="{ checked: agreedProtocol }">
+                    <text v-if="agreedProtocol" class="check-icon">✓</text>
+                </view>
                 <text class="agreement-text">
-                    已阅读并同意<text class="agreement-link">《平台需求发布规则》</text>，<text class="agreement-link">《需求承接协议》</text>
+                    已阅读并同意<text class="agreement-link" @click.stop="handleViewProtocol('publish')">《平台需求发布规则》</text>，<text class="agreement-link" @click.stop="handleViewProtocol('accept')">《需求承接协议》</text>
                 </text>
             </view>
             <view class="btn-row">
-                <view class="delete-btn">
+                <view class="delete-btn" v-if="isEdit" @click="handleDelete">
                     <text class="delete-btn-text">删除</text>
                 </view>
-                <view class="publish-btn" @click="handlePublish">
-                    <text class="publish-btn-text">发布需求</text>
+                <view class="publish-btn" :class="{ disabled: submitting }" @click="handlePublish">
+                    <text class="publish-btn-text">{{ submitting ? '发布中...' : '发布需求' }}</text>
                 </view>
             </view>
         </view>
@@ -143,48 +150,335 @@
         <!-- 金额弹窗 -->
         <price-popup
             v-model:show="showPricePopup"
-            v-model="price"
+            v-model="displayPrice"
             v-model:price-type="priceType"
-            v-model:min-price="minPrice"
-            v-model:max-price="maxPrice"
+            v-model:min-price="formData.min_amount"
+            v-model:max-price="formData.max_amount"
+            v-model:hours="formData.hours"
             @confirm="handlePriceConfirm"
         />
     </view>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useUserStore } from '@/stores/user'
+import { getDemandCategoryLists, publishDemand, editDemand } from '@/api/demand'
+import { getUserVerifyDetail } from '@/api/userVerify'
+import { getUserAddress } from '@/api/community'
+import { uploadImage } from '@/api/app'
 import PricePopup from '@/components/price-popup/price-popup.vue'
 
-// 金额相关数据
-const showPricePopup = ref(false)
-const price = ref(80)
-const priceType = ref<'hour' | 'times' | 'range'>('hour')
-const minPrice = ref(150)
-const maxPrice = ref(210)
+const userStore = useUserStore()
 
-// 点击金额区域打开弹窗
+// 是否编辑模式
+const isEdit = ref(false)
+const editId = ref(0)
+
+// 是否已认证
+const isVerified = ref(false)
+
+// 分类列表
+const categoryList = ref<any[]>([])
+
+// 协议勾选
+const agreedProtocol = ref(false)
+
+// 提交中状态
+const submitting = ref(false)
+
+// 表单数据
+const formData = ref({
+    category_id: 0,
+    title: '',
+    description: '',
+    images: [] as string[],
+    price_type: 1,  // 1=按小时，2=按次，3=按范围
+    hours: 0,
+    hour_price: 0,
+    amount: 0,
+    min_amount: 0,
+    max_amount: 0,
+    community_id: 0,
+    address: '',
+    contact_name: '',
+    contact_phone: '',
+    show_phone: 0,
+    is_urgent: 0
+})
+
+// 金额弹窗
+const showPricePopup = ref(false)
+const priceType = ref<'hour' | 'times' | 'range'>('hour')
+const displayPrice = ref(80)
+
+// 获取分类列表
+const fetchCategories = async () => {
+    try {
+        const data = await getDemandCategoryLists()
+        categoryList.value = data || []
+    } catch (e) {
+        console.error('获取分类失败', e)
+    }
+}
+
+// 检查认证状态
+const checkVerifyStatus = async () => {
+    try {
+        const data = await getUserVerifyDetail()
+        isVerified.value = data && data.status === 1
+    } catch (e) {
+        isVerified.value = false
+    }
+}
+
+// 获取用户地址
+const fetchUserAddress = async () => {
+    try {
+        const data = await getUserAddress()
+        if (data && data.community_id) {
+            formData.value.community_id = data.community_id
+            const addressParts = []
+            if (data.building) addressParts.push(data.building)
+            if (data.room) addressParts.push(data.room)
+            formData.value.address = addressParts.join(' ')
+
+            // 填充联系人和电话
+            if (userStore.userInfo) {
+                formData.value.contact_name = userStore.userInfo.nickname || ''
+                formData.value.contact_phone = userStore.userInfo.mobile || ''
+            }
+        }
+    } catch (e) {
+        console.error('获取地址失败', e)
+    }
+}
+
+// 标题输入
+const handleTitleInput = (e: any) => {
+    formData.value.title = e.detail.value
+}
+
+// 选择分类
+const handleSelectCategory = (id: number) => {
+    formData.value.category_id = id
+}
+
+// 点击金额区域
 const handlePriceClick = () => {
     showPricePopup.value = true
 }
 
 // 金额确认
 const handlePriceConfirm = () => {
-    console.log('金额确认:', {
-        price: price.value,
-        priceType: priceType.value,
-        minPrice: minPrice.value,
-        maxPrice: maxPrice.value
+    // priceType 映射：'hour' → 1, 'times' → 2, 'range' → 3
+    if (priceType.value === 'hour') {
+        formData.value.price_type = 1
+        formData.value.hour_price = displayPrice.value
+        // hours 已经通过 v-model:hours 双向绑定更新
+    } else if (priceType.value === 'times') {
+        formData.value.price_type = 2
+        formData.value.amount = displayPrice.value
+    } else {
+        formData.value.price_type = 3
+        // min_amount 和 max_amount 已经通过 v-model 双向绑定更新
+    }
+}
+
+// 图片上传
+const handleUpload = () => {
+    const remain = 9 - formData.value.images.length
+    if (remain <= 0) {
+        uni.$u.toast('最多上传9张图片')
+        return
+    }
+
+    uni.chooseImage({
+        count: remain,
+        sizeType: ['compressed'],
+        sourceType: ['album', 'camera'],
+        success: async (res) => {
+            uni.showLoading({ title: '上传中...' })
+            try {
+                for (const path of res.tempFilePaths) {
+                    const result = await uploadImage(path, userStore.token || undefined)
+                    if (result && result.uri) {
+                        formData.value.images.push(result.uri)
+                    }
+                }
+            } catch (e) {
+                uni.$u.toast('上传失败')
+            } finally {
+                uni.hideLoading()
+            }
+        }
     })
 }
 
-// 发布需求
-const handlePublish = () => {
-    // TODO: 表单验证和提交
+// 删除图片
+const handleDeleteImage = (index: number) => {
+    formData.value.images.splice(index, 1)
+}
+
+// 切换紧急发布
+const handleToggleUrgent = () => {
+    formData.value.is_urgent = formData.value.is_urgent === 1 ? 0 : 1
+}
+
+// 切换显示手机号
+const handleToggleShowPhone = () => {
+    formData.value.show_phone = formData.value.show_phone === 1 ? 0 : 1
+}
+
+// 切换协议勾选
+const handleToggleAgreement = () => {
+    agreedProtocol.value = !agreedProtocol.value
+}
+
+// 去认证
+const handleGoVerify = () => {
     uni.navigateTo({
-        url: '/pages/publish-success/publish-success'
+        url: '/packages/pages/owner-verify/owner-verify'
     })
 }
+
+// 查看协议
+const handleViewProtocol = (type: string) => {
+    // TODO: 跳转协议页面
+    console.log('查看协议', type)
+}
+
+// 表单验证
+const validateForm = (): boolean => {
+    if (!formData.value.title.trim()) {
+        uni.$u.toast('请输入需求标题')
+        return false
+    }
+    if (!formData.value.category_id) {
+        uni.$u.toast('请选择需求类型')
+        return false
+    }
+    if (!formData.value.description.trim()) {
+        uni.$u.toast('请输入需求描述')
+        return false
+    }
+
+    // 验证金额
+    if (formData.value.price_type === 1) {
+        if (!formData.value.hour_price || formData.value.hour_price <= 0) {
+            uni.$u.toast('请设置金额')
+            return false
+        }
+        if (!formData.value.hours || formData.value.hours <= 0) {
+            uni.$u.toast('请设置小时数')
+            return false
+        }
+    } else if (formData.value.price_type === 2) {
+        if (!formData.value.amount || formData.value.amount <= 0) {
+            uni.$u.toast('请设置金额')
+            return false
+        }
+    } else if (formData.value.price_type === 3) {
+        if (!formData.value.min_amount || !formData.value.max_amount) {
+            uni.$u.toast('请设置金额范围')
+            return false
+        }
+        if (formData.value.min_amount > formData.value.max_amount) {
+            uni.$u.toast('最小金额不能大于最大金额')
+            return false
+        }
+    }
+
+    if (!formData.value.community_id) {
+        uni.$u.toast('请先设置小区地址')
+        return false
+    }
+    if (!formData.value.address.trim()) {
+        uni.$u.toast('请输入详细地址')
+        return false
+    }
+    if (!formData.value.contact_name.trim()) {
+        uni.$u.toast('请输入联系人')
+        return false
+    }
+    if (!formData.value.contact_phone.trim()) {
+        uni.$u.toast('请输入联系电话')
+        return false
+    }
+    if (!/^1[3-9]\d{9}$/.test(formData.value.contact_phone)) {
+        uni.$u.toast('请输入正确的手机号')
+        return false
+    }
+    if (!agreedProtocol.value) {
+        uni.$u.toast('请阅读并同意协议')
+        return false
+    }
+    return true
+}
+
+// 提交发布
+const handlePublish = async () => {
+    if (submitting.value) return
+    if (!validateForm()) return
+
+    submitting.value = true
+    try {
+        const submitData = {
+            category_id: formData.value.category_id,
+            title: formData.value.title,
+            description: formData.value.description,
+            images: formData.value.images,
+            price_type: formData.value.price_type,
+            hours: formData.value.hours || undefined,
+            hour_price: formData.value.hour_price || undefined,
+            amount: formData.value.amount || undefined,
+            min_amount: formData.value.min_amount || undefined,
+            max_amount: formData.value.max_amount || undefined,
+            community_id: formData.value.community_id,
+            address: formData.value.address,
+            contact_name: formData.value.contact_name,
+            contact_phone: formData.value.contact_phone,
+            show_phone: formData.value.show_phone,
+            is_urgent: formData.value.is_urgent
+        }
+
+        let result
+        if (isEdit.value && editId.value) {
+            result = await editDemand({ ...submitData, id: editId.value })
+        } else {
+            result = await publishDemand(submitData)
+        }
+
+        // 跳转到成功页面，传递需求ID和编号
+        uni.redirectTo({
+            url: `/pages/publish-success/publish-success?id=${result.id}&demand_no=${result.demand_no}`
+        })
+    } catch (e) {
+        console.error('发布失败', e)
+    } finally {
+        submitting.value = false
+    }
+}
+
+// 删除（编辑模式下）
+const handleDelete = () => {
+    uni.showModal({
+        title: '提示',
+        content: '确定要删除该需求吗？',
+        success: (res) => {
+            if (res.confirm) {
+                // TODO: 调用删除接口
+                uni.navigateBack()
+            }
+        }
+    })
+}
+
+onMounted(() => {
+    fetchCategories()
+    checkVerifyStatus()
+    fetchUserAddress()
+})
 </script>
 
 <style lang="scss" scoped>
@@ -272,20 +566,6 @@ const handlePublish = () => {
 
     .form-label {
         margin-bottom: 0;
-    }
-
-    .type-hint {
-        font-size: 29rpx;
-        color: #DADADA;
-        margin-left: auto;
-    }
-
-    .type-checkbox {
-        width: 29rpx;
-        height: 29rpx;
-        border: 2rpx solid #DADADA;
-        border-radius: 50%;
-        margin-left: 4rpx;
     }
 }
 
@@ -386,6 +666,43 @@ const handlePublish = () => {
     }
 }
 
+.upload-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18rpx;
+}
+
+.upload-item {
+    width: 145rpx;
+    height: 145rpx;
+    position: relative;
+
+    .upload-img {
+        width: 100%;
+        height: 100%;
+        border-radius: 15rpx;
+    }
+
+    .upload-delete {
+        position: absolute;
+        top: -10rpx;
+        right: -10rpx;
+        width: 36rpx;
+        height: 36rpx;
+        background: rgba(0, 0, 0, 0.5);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        .delete-icon {
+            color: #fff;
+            font-size: 24rpx;
+            line-height: 1;
+        }
+    }
+}
+
 .upload-box {
     width: 145rpx;
     height: 145rpx;
@@ -466,29 +783,21 @@ const handlePublish = () => {
     align-items: center;
     padding: 4rpx;
 
+    &.switch-on {
+        background: #00B6B4;
+        justify-content: flex-end;
+    }
+
     .switch-off-inner {
         width: 47rpx;
         height: 47rpx;
         background: #fff;
         border-radius: 50%;
-    }
-}
+        transition: all 0.2s;
 
-.switch-on {
-    width: 102rpx;
-    height: 55rpx;
-    background: #00B6B4;
-    border-radius: 40rpx;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    padding: 4rpx;
-
-    .switch-on-inner {
-        width: 47rpx;
-        height: 47rpx;
-        background: #fff;
-        border-radius: 50%;
+        &.switch-on-inner {
+            // 样式通过父级控制
+        }
     }
 }
 
@@ -513,6 +822,19 @@ const handlePublish = () => {
         margin-right: 18rpx;
         flex-shrink: 0;
         margin-top: 4rpx;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        &.checked {
+            background: #00B6B4;
+        }
+
+        .check-icon {
+            color: #fff;
+            font-size: 20rpx;
+            line-height: 1;
+        }
     }
 
     .agreement-text {
@@ -556,6 +878,10 @@ const handlePublish = () => {
     display: flex;
     align-items: center;
     justify-content: center;
+
+    &.disabled {
+        opacity: 0.6;
+    }
 
     .publish-btn-text {
         font-size: 29rpx;

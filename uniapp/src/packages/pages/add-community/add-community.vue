@@ -1,12 +1,4 @@
 <template>
-    <page-meta :page-style="$theme.pageStyle">
-        <!-- #ifndef H5 -->
-        <navigation-bar
-            :front-color="$theme.navColor"
-            :background-color="$theme.navBgColor"
-        />
-        <!-- #endif -->
-    </page-meta>
     <view class="add-community">
         <!-- 表单区域 -->
         <view class="form-section">

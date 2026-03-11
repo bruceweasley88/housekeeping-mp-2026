@@ -1,12 +1,4 @@
 <template>
-    <page-meta :page-style="$theme.pageStyle">
-        <!-- #ifndef H5 -->
-        <navigation-bar
-            :front-color="$theme.navColor"
-            :background-color="$theme.navBgColor"
-        />
-        <!-- #endif -->
-    </page-meta>
     <view class="about-us">
         <!-- Logo 区域 -->
         <view class="header">
@@ -126,11 +118,11 @@ const handleLogout = () => {
 .menu-card {
     background-color: #ffffff;
     border-radius: 29rpx;
-    padding: 0 29rpx;
+    overflow: hidden;
 }
 
 .menu-item {
-    padding: 29rpx 0;
+    padding: 29rpx;
 }
 
 .menu-item:not(:last-child) {
