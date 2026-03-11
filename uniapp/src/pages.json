@@ -11,12 +11,18 @@
             "path": "pages/message/message",
             "style": {
                 "navigationBarTitleText": "消息"
+            },
+            "meta": {
+                "auth": true
             }
         },
         {
             "path": "pages/chat/chat",
             "style": {
                 "navigationBarTitleText": "聊天"
+            },
+            "meta": {
+                "auth": true
             }
         },
         {
@@ -29,6 +35,9 @@
                 "navigationBarTitleText": "资讯",
                 // #endif
                 "disableScroll": true
+            },
+            "meta": {
+                "auth": true
             }
         },
         {
@@ -40,15 +49,9 @@
                 // #ifdef H5
                 "navigationBarTitleText": "个人中心"
                 // #endif
-            }
-        },
-        {
-            "path": "pages/login/login",
-            "style": {
-                "navigationBarTitleText": "登录"
             },
             "meta": {
-                "white": true
+                "auth": true
             }
         },
         {
@@ -145,6 +148,9 @@
             "path": "pages/bind_mobile/bind_mobile",
             "style": {
                 "navigationBarTitleText": "绑定手机号"
+            },
+            "meta": {
+                "auth": true
             }
         },
         {
@@ -169,6 +175,9 @@
             "path": "pages/publish-demand/publish-demand",
             "style": {
                 "navigationBarTitleText": "发布需求"
+            },
+            "meta": {
+                "auth": true
             }
         },
         {
@@ -266,18 +275,27 @@
 				"path": "pages/my-bill/my-bill",
 				"style": {
 					"navigationBarTitleText": "我的账单"
+				},
+				"meta": {
+					"auth": true
 				}
 			},
 			{
 				"path": "pages/my-profile/my-profile",
 				"style": {
                     "navigationBarTitleText": "我的资料"
-                }
+                },
+				"meta": {
+					"auth": true
+				}
             },
 			{
 				"path": "pages/add-community/add-community",
 				"style": {
 					"navigationBarTitleText": "新增小区"
+				},
+				"meta": {
+					"auth": true
 				}
 			},
 			{
@@ -290,12 +308,18 @@
 				"path": "pages/upload-bankcard/upload-bankcard",
 				"style": {
 					"navigationBarTitleText": "上传银行卡"
+				},
+				"meta": {
+					"auth": true
 				}
 			},
 			{
 				"path": "pages/owner-verify/owner-verify",
 				"style": {
 					"navigationBarTitleText": "业主认证"
+				},
+				"meta": {
+					"auth": true
 				}
 			}
 		]
@@ -314,20 +338,26 @@
         "iconWidth": "20px",
         "list": [
             {
-                "iconPath": "static/images/tabbar/home.png",
-                "selectedIconPath": "static/images/tabbar/home_s.png",
+                "iconPath": "static/nav_icon/icon_homen.png",
+                "selectedIconPath": "static/nav_icon/icon_homes.png",
                 "pagePath": "pages/index/index",
                 "text": "首页"
             },
             {
-                "iconPath": "static/images/tabbar/news.png",
-                "selectedIconPath": "static/images/tabbar/news_s.png",
-                "pagePath": "pages/news/news",
-                "text": "资讯"
+                "iconPath": "static/nav_icon/icon_helpn.png",
+                "selectedIconPath": "static/nav_icon/icon_helps.png",
+                "pagePath": "pages/mutual-aid-list/mutual-aid-list",
+                "text": "互助"
             },
             {
-                "iconPath": "static/images/tabbar/user.png",
-                "selectedIconPath": "static/images/tabbar/user_s.png",
+                "iconPath": "static/nav_icon/icon_talkn.png",
+                "selectedIconPath": "static/nav_icon/icon_talks.png",
+                "pagePath": "pages/message/message",
+                "text": "信息"
+            },
+            {
+                "iconPath": "static/nav_icon/icon_myn.png",
+                "selectedIconPath": "static/nav_icon/icon_mys.png",
                 "pagePath": "pages/user/user",
                 "text": "我的"
             }

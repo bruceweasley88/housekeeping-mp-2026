@@ -7,13 +7,15 @@ interface UserSate {
     userInfo: Record<string, any>
     token: string | null
     temToken: string | null
+    needShowLoginPopup: boolean
 }
 export const useUserStore = defineStore({
     id: 'userStore',
     state: (): UserSate => ({
         userInfo: {},
         token: cache.get(TOKEN_KEY) || null,
-        temToken: null
+        temToken: null,
+        needShowLoginPopup: false
     }),
     getters: {
         isLogin: (state) => !!state.token
@@ -33,6 +35,9 @@ export const useUserStore = defineStore({
             this.token = ''
             this.userInfo = {}
             cache.remove(TOKEN_KEY)
+        },
+        setNeedShowLoginPopup(val: boolean) {
+            this.needShowLoginPopup = val
         }
     }
 })

@@ -152,6 +152,14 @@ class Demand extends BaseModel
         if (empty($value)) {
             return [];
         }
+        // 如果是对象则转换为数组
+        if (is_object($value)) {
+            $value = (array)$value;
+        }
+        // 确保是数组
+        if (!is_array($value)) {
+            return [];
+        }
         return array_map(function ($item) {
             return FileService::getFileUrl($item);
         }, $value);

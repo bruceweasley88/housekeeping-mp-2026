@@ -179,7 +179,7 @@ const handlePwd = () => {
 // 退出登录
 const logoutHandle = () => {
     userStore.logout()
-    router.redirectTo('/pages/login/login')
+    router.switchTab('/pages/index/index')
 }
 
 const bindWechat = async () => {

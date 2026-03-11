@@ -2,7 +2,7 @@
     <view class="index">
         <!-- 顶部地址栏 -->
         <view class="address-bar" @click="handleSelectCommunity">
-            <image class="address-icon" src="/static/index_page/icon_addressb@2x.png" mode="aspectFit" />
+            <image class="address-icon" src="/static/index_page/icon_addressb.png" mode="aspectFit" />
             <text class="address-text">{{ addressText || '请选择小区' }}</text>
             <text class="address-arrow">></text>
         </view>
@@ -35,37 +35,9 @@
         <!-- 分类网格 -->
         <view class="category-section">
             <view class="category-grid">
-                <view class="category-item">
-                    <image class="category-icon" src="/static/index_page/icon_all@2x.png" mode="aspectFit" />
-                    <text class="category-name">全部需求</text>
-                </view>
-                <view class="category-item">
-                    <image class="category-icon" src="/static/index_page/icon_soft@2x.png" mode="aspectFit" />
-                    <text class="category-name">轻需求</text>
-                </view>
-                <view class="category-item">
-                    <image class="category-icon" src="/static/index_page/icon_car@2x.png" mode="aspectFit" />
-                    <text class="category-name">接送需求</text>
-                </view>
-                <view class="category-item">
-                    <image class="category-icon" src="/static/index_page/icon_repair@2x.png" mode="aspectFit" />
-                    <text class="category-name">维修需求</text>
-                </view>
-                <view class="category-item">
-                    <image class="category-icon" src="/static/index_page/icon_keep@2x.png" mode="aspectFit" />
-                    <text class="category-name">陪伴需求</text>
-                </view>
-                <view class="category-item">
-                    <image class="category-icon" src="/static/index_page/icon_buy@2x.png" mode="aspectFit" />
-                    <text class="category-name">物品交易</text>
-                </view>
-                <view class="category-item">
-                    <image class="category-icon" src="/static/index_page/icon_clean@2x.png" mode="aspectFit" />
-                    <text class="category-name">家政服务</text>
-                </view>
-                <view class="category-item">
-                    <image class="category-icon" src="/static/index_page/icon_other@2x.png" mode="aspectFit" />
-                    <text class="category-name">其他需求</text>
+                <view class="category-item" v-for="item in categoryList" :key="item.id" @click="handleCategoryClick(item)">
+                    <image class="category-icon" :src="getCategoryIcon(item.icon)" mode="aspectFit" />
+                    <text class="category-name">{{ item.name }}</text>
                 </view>
             </view>
         </view>
@@ -94,9 +66,11 @@
 <script setup lang="ts">
 import { getIndex } from '@/api/shop'
 import { getUserAddress } from '@/api/community'
+import { getDemandCategoryLists } from '@/api/demand'
 import { onLoad, onShow } from "@dcloudio/uni-app";
-import { computed, reactive, ref } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import LSwiper from '@/components/l-swiper/l-swiper.vue'
+import { useUserStore } from '@/stores/user'
 
 // #ifdef MP
 import MpPrivacyPopup from './component/mp-privacy-popup.vue'
@@ -104,6 +78,8 @@ import MpPrivacyPopup from './component/mp-privacy-popup.vue'
 
 import DemandCard from '@/components/demand-card/demand-card.vue'
 import LoginPopup from '@/components/login-popup/login-popup.vue'
+
+const userStore = useUserStore()
 
 const state = reactive<{
     pages: any[]
@@ -115,6 +91,38 @@ const state = reactive<{
 
 // 用户地址信息
 const addressText = ref('')
+
+// 需求分类列表
+const categoryList = ref<{ id: number; name: string; icon: string }[]>([])
+
+// 获取分类列表（添加"全部"静态项）
+const fetchCategoryList = async () => {
+    try {
+        const res = await getDemandCategoryLists()
+        // 在前面添加"全部需求"静态项
+        categoryList.value = [
+            { id: 0, name: '全部需求', icon: 'icon_all.png' },
+            ...(res || [])
+        ]
+    } catch (e) {
+        // 使用默认分类
+        categoryList.value = [
+            { id: 0, name: '全部需求', icon: 'icon_all.png' }
+        ]
+    }
+}
+
+// 获取分类图标完整路径
+const getCategoryIcon = (icon: string) => {
+    return `/static/index_page/${icon}`
+}
+
+// 分类点击事件
+const handleCategoryClick = (item: { id: number; name: string }) => {
+    uni.navigateTo({
+        url: `/pages/all-demands/all-demands?category_id=${item.id}`
+    })
+}
 
 
 // 获取banner组件的数据
@@ -147,7 +155,10 @@ const fetchUserAddress = async () => {
 }
 
 
-onLoad(() => { getData() })
+onLoad(() => {
+    getData()
+    fetchCategoryList()
+})
 
 // 每次显示页面时刷新地址
 onShow(() => { fetchUserAddress() })
@@ -162,8 +173,22 @@ const handleSelectCommunity = () => {
 // 登录弹窗
 const showLogin = ref(false)
 
+// 监听 needShowLoginPopup 状态，控制登录弹窗显示
+watch(
+    () => userStore.needShowLoginPopup,
+    (val) => {
+        if (val) {
+            showLogin.value = true
+            userStore.setNeedShowLoginPopup(false) // 重置状态
+        }
+    },
+    { immediate: true }
+)
+
 const handlePublish = () => {
-    showLogin.value = true
+    uni.navigateTo({
+        url: '/pages/publish-demand/publish-demand'
+    })
 }
 
 const handleLoginConfirm = (data: { avatar: string; nickname: string }) => {

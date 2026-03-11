@@ -50,8 +50,10 @@ const requestHooks: RequestHooks = {
             case RequestCodeEnum.TOKEN_INVALID:
                 logout();
                 if (isAuth && !getToken()) {
-                    uni.navigateTo({
-                        url: "/pages/login/login",
+                    // 跳转首页并标记显示登录弹窗
+                    useUserStore().setNeedShowLoginPopup(true);
+                    uni.switchTab({
+                        url: "/pages/index/index",
                     });
                 }
                 return Promise.reject(msg);

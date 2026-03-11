@@ -39,10 +39,10 @@
                     </view>
                 </view>
             </view>
-            <navigator v-else class="flex items-center" hover-class="none" url="/pages/login/login">
+            <view v-else class="flex items-center" @click="handleLoginClick">
                 <u-avatar src="/static/images/user/default_avatar.png" :size="120"></u-avatar>
                 <view class="text-white text-3xl ml-[20rpx]">未登录</view>
-            </navigator>
+            </view>
             <navigator v-if="isLogin" hover-class="none" url="/pages/user_set/user_set">
                 <u-icon name="setting" color="#fff" :size="48"></u-icon>
             </navigator>
@@ -51,7 +51,10 @@
 </template>
 <script lang="ts" setup>
 import { useCopy } from '@/hooks/useCopy'
-import {computed} from "vue";
+import { useUserStore } from '@/stores/user'
+import { computed } from "vue";
+
+const userStore = useUserStore()
 
 const props = defineProps({
     pageMeta: {
@@ -84,6 +87,12 @@ const navigateTo = (url: string) => {
     uni.navigateTo({
         url
     })
+}
+
+// 未登录点击，跳转首页并显示登录弹窗
+const handleLoginClick = () => {
+    userStore.setNeedShowLoginPopup(true)
+    uni.switchTab({ url: '/pages/index/index' })
 }
 </script>
 

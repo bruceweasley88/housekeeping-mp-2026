@@ -49,6 +49,8 @@
 
 		<!-- 底部Tabbar占位 -->
 		<view class="tabbar-placeholder"></view>
+
+		<tabbar />
 	</view>
 </template>
 

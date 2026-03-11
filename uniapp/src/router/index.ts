@@ -51,7 +51,11 @@ router.afterEach((to, from) => {
 router.beforeEach(async (to, from) => {
     const userStore = useUserStore();
     if (!userStore.isLogin && to.meta.auth) {
-        return '/pages/login/login'
+        userStore.setNeedShowLoginPopup(true);
+        return {
+            path: '/pages/index/index',
+            navType: 'switchTab'
+        }
     }
 })
 

@@ -84,7 +84,7 @@ const showLogout = ref(false)
 // 退出登录
 const handleLogout = () => {
     userStore.logout()
-    router.redirectTo('/pages/login/login')
+    router.switchTab('/pages/index/index')
 }
 </script>
 

@@ -5,51 +5,63 @@
         v-bind="tabbarStyle"
         :list="tabbarList"
         @change="handleChange"
-        :hide-tab-bar="true"
+        :hide-tab-bar="false"
     ></u-tabbar>
 </template>
 
 <script lang="ts" setup>
-import { useAppStore } from '@/stores/app'
 import { navigateTo } from '@/utils/util'
 import { computed, ref } from 'vue'
+
 const current = ref()
-const appStore = useAppStore()
-const tabbarList = computed(() => {
-    return appStore.getTabbarConfig
-        ?.filter((item: any) => item.is_show == 1)
-        .map((item: any) => {
-            return {
-                iconPath: item.unselected,
-                selectedIconPath: item.selected,
-                text: item.name,
-                link: item.link,
-                pagePath: item.link.path
-            }
-        })
-})
+
+// 静态 tabbar 配置
+const tabbarList = [
+    {
+        iconPath: '/static/nav_icon/icon_homen.png',
+        selectedIconPath: '/static/nav_icon/icon_homes.png',
+        text: '首页',
+        pagePath: '/pages/index/index'
+    },
+    {
+        iconPath: '/static/nav_icon/icon_helpn.png',
+        selectedIconPath: '/static/nav_icon/icon_helps.png',
+        text: '互助',
+        pagePath: '/pages/mutual-aid-list/mutual-aid-list'
+    },
+    {
+        iconPath: '/static/nav_icon/icon_talkn.png',
+        selectedIconPath: '/static/nav_icon/icon_talks.png',
+        text: '信息',
+        pagePath: '/pages/message/message'
+    },
+    {
+        iconPath: '/static/nav_icon/icon_myn.png',
+        selectedIconPath: '/static/nav_icon/icon_mys.png',
+        text: '我的',
+        pagePath: '/pages/user/user'
+    }
+]
+
+// 静态颜色配置
+const tabbarStyle = {
+    activeColor: '#00B6B4',
+    inactiveColor: '#616B6B'
+}
+
 const showTabbar = computed(() => {
     const currentPages = getCurrentPages()
     const currentPage = currentPages[currentPages.length - 1]
-    const current = tabbarList.value.findIndex((item: any) => {
+    const current = tabbarList.findIndex((item) => {
         return item.pagePath === '/' + currentPage.route
     })
     return current >= 0
 })
 
-const tabbarStyle = computed(() => ({
-    activeColor: appStore.getStyleConfig.selected_color,
-    inactiveColor: appStore.getStyleConfig.default_color
-}))
-
-const nativeTabbar = [
-    '/pages/index/index',
-    '/pages/news/news',
-    '/pages/user/user'
-]
 const handleChange = (index: number) => {
-    const selectTab = tabbarList.value[index]
-    const navigateType = nativeTabbar.includes(selectTab.link.path) ? 'switchTab' : 'reLaunch'
-    navigateTo(selectTab.link, navigateType)
+    const selectTab = tabbarList[index]
+    uni.switchTab({
+        url: selectTab.pagePath
+    })
 }
 </script>

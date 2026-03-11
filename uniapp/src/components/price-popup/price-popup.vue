@@ -47,18 +47,18 @@
                             placeholder="0.00"
                             placeholder-style="color: #DADADA;"
                         />
-                        <text class="price-unit">/小时</text>
+                        <text class="price-unit">价格</text>
                     </view>
                     <view class="hour-row">
-                        <text class="hour-label">总时长</text>
+                        <text class="price-symbol">&nbsp;</text>
                         <input
-                            class="hour-input"
+                            class="price-input"
                             type="digit"
                             v-model="hoursValue"
                             placeholder="0"
                             placeholder-style="color: #DADADA;"
                         />
-                        <text class="hour-unit">小时</text>
+                        <text class="price-unit">小时</text>
                     </view>
                 </view>
                 <!-- 按次数 -->
@@ -216,14 +216,42 @@ const handleCancel = () => {
 
 // 确定
 const handleConfirm = () => {
-    if (currentType.value === 'range') {
-        emit('update:minPrice', parseFloat(minPriceValue.value) || 0)
-        emit('update:maxPrice', parseFloat(maxPriceValue.value) || 0)
-    } else if (currentType.value === 'hour') {
-        emit('update:modelValue', parseFloat(priceValue.value) || 0)
-        emit('update:hours', parseFloat(hoursValue.value) || 1)
+    if (currentType.value === 'hour') {
+        const price = parseFloat(priceValue.value) || 0
+        const hours = parseFloat(hoursValue.value) || 0
+
+        // 验证最小值
+        if (price < 1) {
+            uni.showToast({ title: '价格必须大于等于1', icon: 'none' })
+            return
+        }
+        if (hours < 1) {
+            uni.showToast({ title: '时长必须大于等于1小时', icon: 'none' })
+            return
+        }
+
+        emit('update:modelValue', price)
+        emit('update:hours', hours)
+    } else if (currentType.value === 'range') {
+        const minPrice = parseFloat(minPriceValue.value) || 0
+        const maxPrice = parseFloat(maxPriceValue.value) || 0
+
+        if (minPrice < 1 || maxPrice < 1) {
+            uni.showToast({ title: '价格必须大于等于1', icon: 'none' })
+            return
+        }
+
+        emit('update:minPrice', minPrice)
+        emit('update:maxPrice', maxPrice)
     } else {
-        emit('update:modelValue', parseFloat(priceValue.value) || 0)
+        const price = parseFloat(priceValue.value) || 0
+
+        if (price < 1) {
+            uni.showToast({ title: '价格必须大于等于1', icon: 'none' })
+            return
+        }
+
+        emit('update:modelValue', price)
     }
     emit('confirm')
     showPopup.value = false
@@ -302,34 +330,12 @@ const handleConfirm = () => {
 .price-hour {
     display: flex;
     flex-direction: column;
-    gap: 25rpx;
+    gap: 36rpx;
 }
 
 .hour-row {
     display: flex;
     align-items: center;
-}
-
-.hour-label {
-    font-size: 29rpx;
-    color: #222929;
-    width: 100rpx;
-}
-
-.hour-input {
-    flex: 1;
-    font-size: 40rpx;
-    font-weight: bold;
-    color: #00A2A0;
-    background: transparent;
-    border: none;
-    padding: 0 10rpx;
-    text-align: center;
-}
-
-.hour-unit {
-    font-size: 29rpx;
-    color: #222929;
 }
 
 .price-single {
@@ -349,7 +355,9 @@ const handleConfirm = () => {
 }
 
 .price-input {
-    width: 180rpx;
+    flex: 1;
+    max-width: 300rpx;
+    height: 80rpx;
     font-size: 55rpx;
     font-weight: bold;
     color: #00A2A0;

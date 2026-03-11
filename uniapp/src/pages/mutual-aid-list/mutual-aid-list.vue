@@ -69,6 +69,8 @@
                 @location="handleLocation(item)"
             />
         </view>
+
+        <tabbar />
     </view>
 </template>
 
@@ -154,6 +156,7 @@ const handleLocation = (item: any) => {
     background-color: #F6F6F6;
     min-height: 100vh;
     padding: 20rpx 30rpx;
+    padding-bottom: calc(120rpx + env(safe-area-inset-bottom));
 }
 
 // 统计卡片区域
