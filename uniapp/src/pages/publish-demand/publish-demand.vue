@@ -59,6 +59,7 @@
                         <text class="price-symbol">¥</text>
                         <text class="price-value">{{ displayPrice.toFixed(2) }}</text>
                         <text class="price-unit">/{{ priceType === 'hour' ? '小时' : '次' }}</text>
+                        <text v-if="priceType === 'hour' && formData.hours > 0" class="price-hours">× {{ formData.hours }}小时</text>
                     </template>
                     <view class="price-arrow"></view>
                 </view>
@@ -193,7 +194,7 @@ const formData = ref({
     title: '',
     description: '',
     images: [] as string[],
-    price_type: 1,  // 1=按小时，2=按次，3=按范围
+    price_type: 2,  // 1=按小时，2=按次，3=按范围
     hours: 0,
     hour_price: 0,
     amount: 0,
@@ -209,7 +210,7 @@ const formData = ref({
 
 // 金额弹窗
 const showPricePopup = ref(false)
-const priceType = ref<'hour' | 'times' | 'range'>('hour')
+const priceType = ref<'hour' | 'times' | 'range'>('times')
 const displayPrice = ref(80)
 
 // 获取分类列表
@@ -619,6 +620,13 @@ onMounted(() => {
         font-weight: bold;
         color: #00A2A0;
         margin-left: 5rpx;
+    }
+
+    .price-hours {
+        font-size: 25rpx;
+        font-weight: bold;
+        color: #00A2A0;
+        margin-left: 10rpx;
     }
 
     .price-range-text {

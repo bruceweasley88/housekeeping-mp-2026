@@ -114,22 +114,12 @@ class DemandController extends BaseApiController
     }
 
     /**
-     * 我发布的需求（需登录）
+     * 我的需求列表（需登录）- 合并接口
      */
-    public function myPublish()
+    public function myList()
     {
-        $params = (new DemandValidate())->get()->goCheck('myPublish');
-        $result = DemandLogic::myPublish($this->userId, $params);
-        return $this->data($result);
-    }
-
-    /**
-     * 我承接的需求（需登录）
-     */
-    public function myAccept()
-    {
-        $params = (new DemandValidate())->get()->goCheck('myAccept');
-        $result = DemandLogic::myAccept($this->userId, $params);
+        $params = (new DemandValidate())->get()->goCheck('myList');
+        $result = DemandLogic::myList($this->userId, $params);
         return $this->data($result);
     }
 }

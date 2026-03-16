@@ -1,5 +1,5 @@
 <template>
-    <view class="demand-card">
+    <view class="demand-card" @click="handleCardClick">
         <!-- 顶部：标签 + 标题 + 地址 -->
         <view class="card-header">
             <view class="tag" v-if="tag">{{ tag }}</view>
@@ -15,8 +15,8 @@
             <view class="content-left">
                 <text class="description">{{ description }}</text>
                 <view class="price-row">
-                    <text class="price">{{ price }}</text>
-                    <text class="price-unit">{{ priceUnit }}</text>
+                    <text class="price">{{ computedPrice.value }}</text>
+                    <text class="price-unit">{{ computedPrice.unit }}</text>
                 </view>
             </view>
             <image
@@ -42,7 +42,9 @@
 </template>
 
 <script setup lang="ts">
-defineProps({
+import { computed } from 'vue'
+
+const props = defineProps({
     // 标签（如：紧急）
     tag: {
         type: String,
@@ -63,15 +65,40 @@ defineProps({
         type: String,
         default: ''
     },
-    // 价格
+    // 价格类型：1=按小时，2=按次，3=按范围
+    priceType: {
+        type: Number,
+        default: 0  // 0 表示使用旧的 price/priceUnit 方式
+    },
+    // 按次金额
+    amount: {
+        type: [Number, String],
+        default: 0
+    },
+    // 按小时 - 每小时金额
+    hourPrice: {
+        type: [Number, String],
+        default: 0
+    },
+    // 按范围 - 最小金额
+    minAmount: {
+        type: [Number, String],
+        default: 0
+    },
+    // 按范围 - 最大金额
+    maxAmount: {
+        type: [Number, String],
+        default: 0
+    },
+    // 价格（旧方式，兼容用）
     price: {
         type: String,
         default: ''
     },
-    // 价格单位
+    // 价格单位（旧方式，兼容用）
     priceUnit: {
         type: String,
-        default: '元'
+        default: ''
     },
     // 图片
     image: {
@@ -100,7 +127,44 @@ defineProps({
     }
 })
 
-const emit = defineEmits(['action', 'location'])
+// 计算价格显示
+const computedPrice = computed(() => {
+    // 如果 priceType 为 0，使用旧的 price/priceUnit 方式
+    if (!props.priceType) {
+        return {
+            value: props.price,
+            unit: props.priceUnit
+        }
+    }
+
+    const type = props.priceType
+
+    if (type === 1) {
+        // 按小时
+        return {
+            value: String(props.hourPrice || 0),
+            unit: '/小时'
+        }
+    } else if (type === 3) {
+        // 按范围：整体显示 "min~max元"
+        return {
+            value: (props.minAmount || 0) + '~' + (props.maxAmount || 0) + '元',
+            unit: ''
+        }
+    } else {
+        // 按次
+        return {
+            value: String(props.amount || 0),
+            unit: '/次'
+        }
+    }
+})
+
+const emit = defineEmits(['action', 'location', 'cardClick'])
+
+const handleCardClick = () => {
+    emit('cardClick')
+}
 
 const handleAction = () => {
     emit('action')

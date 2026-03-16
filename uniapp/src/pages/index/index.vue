@@ -46,7 +46,9 @@
         <view class="demand-section">
             <text class="section-title">最新需求</text>
             <demand-card tag="紧急" title="小三数学家教2小时" location="保利天悦A10"
-                description="需要找小学三年级数学家教，周六日两天晚上19:00-21:00上课，合适的可长期…" price="300" priceUnit="元/小时"
+                description="需要找小学三年级数学家教，周六日两天晚上19:00-21:00上课，合适的可长期…"
+                :priceType="1"
+                :hourPrice="150"
                 image="/static/index_page/img_demand_1.png" username="小伟妈妈" publishTime="发布于2026.01.02 12:00"
                 @action="handleTakeTask" />
         </view>

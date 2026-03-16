@@ -25,7 +25,7 @@
 
 ---
 
-## 接口列表（共 11 个）
+## 接口列表（共 10 个）
 
 | 序号 | 接口 | 方法 | 需登录 | 说明 |
 |------|------|------|--------|------|
@@ -38,8 +38,7 @@
 | 7 | `/demand/cancelAccept` | POST | 是 | 取消承接 |
 | 8 | `/demand/finish` | POST | 是 | 确认完成 |
 | 9 | `/demand/adjustAmount` | POST | 是 | 调整金额 |
-| 10 | `/demand/myPublish` | GET | 是 | 我发布的需求 |
-| 11 | `/demand/myAccept` | GET | 是 | 我承接的需求 |
+| 10 | `/demand/myList` | GET | 是 | 我的需求列表（type=publish/accept） |
 
 ---
 
@@ -422,15 +421,16 @@
 
 ---
 
-### 10. 我发布的需求
+### 10. 我的需求列表（合并接口）
 
-**接口**: `/demand/myPublish`
+**接口**: `/demand/myList`
 **方法**: GET
 **需登录**: 是
 
 **参数**:
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
+| type | string | 否 | 类型：`publish`=我发布的，`accept`=我承接的，默认`publish` |
 | status | int | 否 | 状态筛选 |
 | page_no | int | 否 | 页码，默认1 |
 | page_size | int | 否 | 每页数量，默认10 |
@@ -446,6 +446,7 @@
         "id": 1,
         "demand_no": "DQ20260310001",
         "title": "初三英语家教",
+        "description": "需要找家教...",
         "images": ["https://xxx.com/1.jpg"],
         "amount": "160.00",
         "price_type": 1,
@@ -455,13 +456,14 @@
         "is_urgent": 0,
         "create_time": "2026-03-10 10:00:00",
         "category_name": "陪伴需求",
-        "accept_user": {
-          "id": 2,
-          "nickname": "李四",
-          "avatar": "https://xxx.com/avatar.jpg",
-          "mobile": "138****8888"
+        "community_name": "阳光小区",
+        "address": "1栋101室",
+        "user_info": {
+          "id": 1,
+          "nickname": "张三",
+          "avatar": "https://xxx.com/avatar.jpg"
         },
-        "accept_time": "2026-03-10 11:00:00"
+        "accept_time_format": "2026.03.10 11:00"
       }
     ],
     "count": 10,
@@ -472,67 +474,10 @@
 ```
 
 **备注**:
-- 按 create_time 降序排列
-- 返回当前用户发布的所有状态的需求
-
----
-
-### 11. 我承接的需求
-
-**接口**: `/demand/myAccept`
-**方法**: GET
-**需登录**: 是
-
-**参数**:
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| status | int | 否 | 状态筛选 |
-| page_no | int | 否 | 页码，默认1 |
-| page_size | int | 否 | 每页数量，默认10 |
-
-**返回**:
-```json
-{
-  "code": 1,
-  "msg": "success",
-  "data": {
-    "list": [
-      {
-        "id": 1,
-        "demand_no": "DQ20260310001",
-        "title": "初三英语家教",
-        "images": ["https://xxx.com/1.jpg"],
-        "amount": "160.00",
-        "price_type": 1,
-        "price_type_desc": "按小时",
-        "status": 2,
-        "status_desc": "进行中",
-        "is_urgent": 0,
-        "create_time": "2026-03-10 10:00:00",
-        "accept_time": "2026-03-10 11:00:00",
-        "category_name": "陪伴需求",
-        "community_name": "阳光小区",
-        "address": "1栋101室",
-        "contact_name": "张先生",
-        "contact_phone": "13888888888",
-        "publish_user": {
-          "id": 1,
-          "nickname": "张三",
-          "avatar": "https://xxx.com/avatar.jpg"
-        }
-      }
-    ],
-    "count": 5,
-    "page_no": 1,
-    "page_size": 10
-  }
-}
-```
-
-**备注**:
-- 按 accept_time 降序排列
-- 返回当前用户承接的所有状态的需求
-- 包含完整联系方式（承接者可见）
+- `type=publish` 时：按 create_time 降序排列
+- `type=accept` 时：按 accept_time 降序排列
+- `user_info` 统一返回需求发布者信息
+- 返回字段格式统一，包含：description、community_name、address、is_urgent
 
 ---
 

@@ -52,13 +52,17 @@
         :title="item.title"
         :location="item.address"
         :description="item.description"
-        :price="getPriceValue(item)"
-        :priceUnit="getPriceUnit(item)"
+        :priceType="item.price_type"
+        :amount="item.amount"
+        :hourPrice="item.hour_price"
+        :minAmount="item.min_amount"
+        :maxAmount="item.max_amount"
         :image="item.images?.[0] || ''"
         :avatar="item.user_info?.avatar || ''"
         :username="item.user_info?.nickname || ''"
         :publishTime="formatPublishTime(item.create_time)"
         actionText="承接需求"
+        @cardClick="handleTakeOrder(item)"
         @action="handleTakeOrder(item)"
         @location="handleLocationClick(item)"
       />
@@ -151,36 +155,6 @@ const handleLocationClick = (item: any) => {
     title: '查看位置',
     icon: 'none'
   })
-}
-
-// 获取价格显示值
-const getPriceValue = (item: any): string => {
-  const priceType = item.price_type
-  if (priceType === 1) {
-    // 按小时
-    return String(item.hour_price || 0)
-  } else if (priceType === 3) {
-    // 按范围
-    return String(item.min_amount || 0)
-  } else {
-    // 按次
-    return String(item.amount || 0)
-  }
-}
-
-// 获取价格单位
-const getPriceUnit = (item: any): string => {
-  const priceType = item.price_type
-  if (priceType === 1) {
-    // 按小时
-    return '元/小时'
-  } else if (priceType === 3) {
-    // 按范围
-    return '~' + (item.max_amount || 0) + '元'
-  } else {
-    // 按次
-    return '元/次'
-  }
 }
 
 // 格式化发布时间

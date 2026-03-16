@@ -32,6 +32,7 @@ class DemandValidate extends BaseValidate
         'keyword' => 'max:100',
         'page_no' => 'integer|gt:0',
         'page_size' => 'integer|between:1,100',
+        'type' => 'in:publish,accept',
     ];
 
     protected $message = [
@@ -76,6 +77,7 @@ class DemandValidate extends BaseValidate
         'page_no.gt' => '页码必须大于0',
         'page_size.integer' => '每页数量必须是整数',
         'page_size.between' => '每页数量必须在1-100之间',
+        'type.in' => '类型参数错误，只能是 publish 或 accept',
     ];
 
     /**
@@ -152,18 +154,10 @@ class DemandValidate extends BaseValidate
     }
 
     /**
-     * 我的发布场景
+     * 我的需求列表场景（合并接口）
      */
-    public function sceneMyPublish()
+    public function sceneMyList()
     {
-        return $this->only(['status', 'page_no', 'page_size']);
-    }
-
-    /**
-     * 我的承接场景
-     */
-    public function sceneMyAccept()
-    {
-        return $this->only(['status', 'page_no', 'page_size']);
+        return $this->only(['type', 'status', 'page_no', 'page_size']);
     }
 }

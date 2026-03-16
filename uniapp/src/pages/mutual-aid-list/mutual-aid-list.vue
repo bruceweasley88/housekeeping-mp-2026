@@ -15,7 +15,7 @@
             <view class="stat-card">
                 <view class="stat-info">
                     <view class="stat-number">
-                        <text class="number">{{ receiveCount }}</text>
+                        <text class="number">{{ acceptCount }}</text>
                         <text class="unit">次</text>
                     </view>
                     <text class="stat-label">承接需求</text>
@@ -26,48 +26,64 @@
 
         <!-- 类型切换 -->
         <view class="type-tabs">
-            <view class="tab-item" :class="{ active: currentType === 'publish' }" @click="currentType = 'publish'">
+            <view class="tab-item" :class="{ active: currentType === 'publish' }" @click="switchType('publish')">
                 <text class="tab-text">我发布的</text>
                 <view v-if="currentType === 'publish'" class="tab-indicator"></view>
             </view>
-            <view class="tab-item" :class="{ active: currentType === 'receive' }" @click="currentType = 'receive'">
+            <view class="tab-item" :class="{ active: currentType === 'accept' }" @click="switchType('accept')">
                 <text class="tab-text">我承接的</text>
-                <view v-if="currentType === 'receive'" class="tab-indicator"></view>
+                <view v-if="currentType === 'accept'" class="tab-indicator"></view>
             </view>
         </view>
 
         <!-- 状态筛选 -->
         <view class="status-filter">
             <view
-                v-for="(item, index) in statusList"
+                v-for="(item, index) in currentStatusOptions"
                 :key="index"
                 class="filter-item"
-                :class="{ active: currentStatus === index }"
-                @click="currentStatus = index"
+                :class="{ active: currentStatusIndex === index }"
+                @click="switchStatus(index)"
             >
-                <text class="filter-text">{{ item }}</text>
+                <text class="filter-text">{{ item.label }}</text>
             </view>
         </view>
 
         <!-- 需求列表 -->
         <view class="demand-list">
-            <demand-card
-                v-for="(item, index) in demandList"
-                :key="index"
-                :tag="item.tag"
-                :title="item.title"
-                :location="item.location"
-                :description="item.description"
-                :price="item.price"
-                :priceUnit="item.priceUnit"
-                :image="item.image"
-                :avatar="item.avatar"
-                :username="item.username"
-                :publishTime="item.publishTime"
-                :actionText="item.actionText"
-                @action="handleAction(item)"
-                @location="handleLocation(item)"
-            />
+            <block v-if="!loading && demandList.length > 0">
+                <demand-card
+                    v-for="item in demandList"
+                    :key="item.id"
+                    :tag="item.is_urgent ? '紧急' : ''"
+                    :title="item.title"
+                    :location="formatLocation(item)"
+                    :description="item.description"
+                    :priceType="item.price_type"
+                    :amount="item.amount"
+                    :hourPrice="item.hour_price"
+                    :minAmount="item.min_amount"
+                    :maxAmount="item.max_amount"
+                    :image="item.images?.[0] || ''"
+                    :avatar="item.user_info?.avatar || ''"
+                    :username="item.user_info?.nickname || ''"
+                    :publishTime="formatTime(item.create_time)"
+                    :actionText="'查看详情'"
+                    @cardClick="handleAction(item)"
+                    @action="handleAction(item)"
+                    @location="handleLocation(item)"
+                />
+            </block>
+
+            <!-- 加载中 -->
+            <view v-if="loading" class="loading-wrap">
+                <text class="loading-text">加载中...</text>
+            </view>
+
+            <!-- 空状态 -->
+            <view v-if="!loading && demandList.length === 0" class="empty-wrap">
+                <text class="empty-text">暂无需求</text>
+            </view>
         </view>
 
         <tabbar />
@@ -75,80 +91,156 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-
-// 统计数据
-const publishCount = ref(26)
-const receiveCount = ref(0)
+import { ref, computed } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
+import { getMyDemandList } from '@/api/demand'
 
 // 类型切换
-const currentType = ref<'publish' | 'receive'>('publish')
+const currentType = ref<'publish' | 'accept'>('publish')
 
-// 状态筛选
-const statusList = ['全部需求', '发布中', '已完成', '已下架']
-const currentStatus = ref(0)
+// 状态筛选配置 - 根据 tab 动态变化
+const publishStatusOptions = [
+    { label: '全部需求', value: null },
+    { label: '发布中', value: 'publishing' },   // [1, 2]
+    { label: '已完成', value: 'completed' },     // [3, 6]
+    { label: '已下架', value: 'offline' },       // [4, 5]
+]
 
-// 需求列表数据
-const demandList = ref([
-    {
-        tag: '紧急',
-        title: '小三数学家教2小时',
-        location: '保利天悦A10',
-        description: '需要找小学三年级数学家教，周六日两天晚上19:00-21:00上课，合适的可长期…',
-        price: '300',
-        priceUnit: '元/小时',
-        image: 'https://lanhu-oss-2537-2.lanhuapp.com/FigmaDDSSlicePNG3070b1e672a78d98edd43f2937a16db8.png',
-        avatar: '/static/index_page/icon_avatar_default.png',
-        username: '小伟妈妈',
-        publishTime: '发布于2026.01.02 12:00',
-        actionText: '查看详情',
-        status: '发布中'
-    },
-    {
-        tag: '紧急',
-        title: '小三数学家教2小时',
-        location: '保利天悦A10',
-        description: '需要找小学三年级数学家教，周六日两天晚上19:00-21:00上课，合适的可长期…',
-        price: '300',
-        priceUnit: '元/小时',
-        image: 'https://lanhu-oss-2537-2.lanhuapp.com/FigmaDDSSlicePNG3070b1e672a78d98edd43f2937a16db8.png',
-        avatar: '/static/index_page/icon_avatar_default.png',
-        username: '小伟妈妈',
-        publishTime: '发布于2026.01.02 12:00',
-        actionText: '已完成',
-        status: '已完成'
-    },
-    {
-        tag: '紧急',
-        title: '小三数学家教2小时',
-        location: '保利天悦A10',
-        description: '需要找小学三年级数学家教，周六日两天晚上19:00-21:00上课，合适的可长期…',
-        price: '300',
-        priceUnit: '元/小时',
-        image: 'https://lanhu-oss-2537-2.lanhuapp.com/FigmaDDSSlicePNG3070b1e672a78d98edd43f2937a16db8.png',
-        avatar: '/static/index_page/icon_avatar_default.png',
-        username: '小伟妈妈',
-        publishTime: '发布于2026.01.02 12:00',
-        actionText: '已下架',
-        status: '已下架'
+const acceptStatusOptions = [
+    { label: '全部承接', value: null },
+    { label: '进行中', value: 'ongoing' },       // [2]
+    { label: '已完成', value: 'completed' },     // [3]
+    { label: '已结算', value: 'settled' },       // [6]
+]
+
+// 计算属性：当前的状态选项
+const currentStatusOptions = computed(() => {
+    return currentType.value === 'publish' ? publishStatusOptions : acceptStatusOptions
+})
+
+const currentStatusIndex = ref(0)
+
+// 数据列表
+const demandList = ref<any[]>([])
+const publishCount = ref(0)
+const acceptCount = ref(0)
+const loading = ref(false)
+
+// 格式化位置
+const formatLocation = (item: any) => {
+    if (item.community_name && item.address) {
+        return item.community_name + ' ' + item.address
     }
-])
+    return item.community_name || item.address || ''
+}
 
-// 操作按钮点击
+// 格式化时间
+const formatTime = (time: string) => {
+    if (!time) return ''
+    // 2026-03-10 10:00:00 -> 发布于2026.03.10 10:00
+    const date = time.split(' ')
+    const dateStr = date[0]?.replace(/-/g, '.') || ''
+    const timeStr = date[1]?.substring(0, 5) || ''
+    return `发布于${dateStr} ${timeStr}`
+}
+
+// 切换类型
+const switchType = (type: 'publish' | 'accept') => {
+    if (currentType.value === type) return
+    currentType.value = type
+    currentStatusIndex.value = 0  // 重置状态筛选
+    loadList()
+}
+
+// 切换状态
+const switchStatus = (index: number) => {
+    if (currentStatusIndex.value === index) return
+    currentStatusIndex.value = index
+    loadList()
+}
+
+// 加载列表
+const loadList = async () => {
+    loading.value = true
+    try {
+        const statusOption = currentStatusOptions.value[currentStatusIndex.value]
+        const params: any = {
+            type: currentType.value,
+            page_no: 1,
+            page_size: 100,  // 一次性加载
+        }
+        // 状态筛选由前端过滤，不传 status 参数
+
+        const res = await getMyDemandList(params)
+        let list = res.list || []
+
+        // 前端状态过滤
+        if (statusOption.value === 'publishing') {
+            list = list.filter((item: any) => [1, 2].includes(item.status))
+        } else if (statusOption.value === 'completed') {
+            // 发布的已完成 = 3 或 6，承接的已完成 = 3
+            list = list.filter((item: any) => currentType.value === 'publish'
+                ? [3, 6].includes(item.status)
+                : item.status === 3)
+        } else if (statusOption.value === 'offline') {
+            list = list.filter((item: any) => [4, 5].includes(item.status))
+        } else if (statusOption.value === 'ongoing') {
+            list = list.filter((item: any) => item.status === 2)
+        } else if (statusOption.value === 'settled') {
+            list = list.filter((item: any) => item.status === 6)
+        }
+
+        demandList.value = list
+
+        // 更新统计
+        if (currentType.value === 'publish') {
+            publishCount.value = (res.list || []).length
+        } else {
+            acceptCount.value = (res.list || []).length
+        }
+    } catch (e) {
+        console.error('加载列表失败', e)
+        demandList.value = []
+    } finally {
+        loading.value = false
+    }
+}
+
+// 加载统计数据
+const loadStats = async () => {
+    try {
+        // 并行加载两个类型的统计数据
+        const [publishRes, acceptRes] = await Promise.all([
+            getMyDemandList({ type: 'publish', page_size: 100 }),
+            getMyDemandList({ type: 'accept', page_size: 100 }),
+        ])
+
+        publishCount.value = (publishRes.list || []).length
+        acceptCount.value = (acceptRes.list || []).length
+    } catch (e) {
+        console.error('加载统计失败', e)
+    }
+}
+
+// 操作按钮点击 - 跳转详情页
 const handleAction = (item: any) => {
-    uni.showToast({
-        title: `点击了: ${item.title}`,
-        icon: 'none'
+    uni.navigateTo({
+        url: `/pages/demand/demand?id=${item.id}`
     })
 }
 
-// 地址点击
+// 地址点击 - 跳转详情页
 const handleLocation = (item: any) => {
-    uni.showToast({
-        title: `位置: ${item.location}`,
-        icon: 'none'
+    uni.navigateTo({
+        url: `/pages/demand/demand?id=${item.id}`
     })
 }
+
+// 页面显示时刷新数据（因为是常驻tabbar页面）
+onShow(() => {
+    loadStats()
+    loadList()
+})
 </script>
 
 <style lang="scss" scoped>
@@ -277,5 +369,29 @@ const handleLocation = (item: any) => {
 // 需求列表
 .demand-list {
     // 列表样式
+}
+
+// 加载中
+.loading-wrap {
+    display: flex;
+    justify-content: center;
+    padding: 60rpx 0;
+}
+
+.loading-text {
+    font-size: 28rpx;
+    color: #9CA6A6;
+}
+
+// 空状态
+.empty-wrap {
+    display: flex;
+    justify-content: center;
+    padding: 100rpx 0;
+}
+
+.empty-text {
+    font-size: 28rpx;
+    color: #9CA6A6;
 }
 </style>

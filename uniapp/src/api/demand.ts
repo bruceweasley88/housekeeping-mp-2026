@@ -86,20 +86,12 @@ export function adjustDemandAmount(demand_id: number, amount: number) {
     return request.post({ url: '/demand/adjustAmount', data: { demand_id, amount } }, { isAuth: true })
 }
 
-// 我发布的需求
-export function getMyPublishDemands(params?: {
+// 我的需求列表（合并接口）
+export function getMyDemandList(params: {
+    type: 'publish' | 'accept'  // publish=我发布的, accept=我承接的
     status?: number
     page_no?: number
     page_size?: number
 }) {
-    return request.get({ url: '/demand/myPublish', data: params }, { isAuth: true })
-}
-
-// 我承接的需求
-export function getMyAcceptDemands(params?: {
-    status?: number
-    page_no?: number
-    page_size?: number
-}) {
-    return request.get({ url: '/demand/myAccept', data: params }, { isAuth: true })
+    return request.get({ url: '/demand/myList', data: params }, { isAuth: true })
 }

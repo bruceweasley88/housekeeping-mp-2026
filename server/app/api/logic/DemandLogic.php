@@ -477,84 +477,28 @@ class DemandLogic extends BaseLogic
     }
 
     /**
-     * 我发布的需求（需登录）
+     * 我的需求列表（需登录）- 合并接口
+     * @param int $userId 用户ID
+     * @param array $params 参数（type: publish/accept, status, page_no, page_size）
      */
-    public static function myPublish(int $userId, array $params): array
+    public static function myList(int $userId, array $params): array
     {
-        $where = [
-            ['user_id', '=', $userId],
-        ];
+        $type = $params['type'] ?? 'publish';
+        $page = $params['page_no'] ?? 1;
+        $size = $params['page_size'] ?? 10;
+
+        // 根据 type 构建查询条件
+        $where = [];
+        if ($type === 'publish') {
+            $where[] = ['user_id', '=', $userId];
+        } else {
+            $where[] = ['accept_user_id', '=', $userId];
+        }
 
         // 状态筛选
         if (isset($params['status']) && $params['status'] !== '' && $params['status'] !== null) {
             $where[] = ['status', '=', $params['status']];
         }
-
-        $page = $params['page_no'] ?? 1;
-        $size = $params['page_size'] ?? 10;
-
-        $count = Demand::where($where)->count();
-        $list = Demand::where($where)
-            ->with(['category' => function($query) {
-                $query->field('id,name');
-            }, 'acceptor' => function($query) {
-                $query->field('id,nickname,avatar,mobile');
-            }])
-            ->field('id,demand_no,title,images,amount,price_type,status,is_urgent,accept_time,create_time,category_id')
-            ->page($page, $size)
-            ->order(['create_time' => 'desc'])
-            ->select()
-            ->toArray();
-
-        foreach ($list as &$item) {
-            $item['status_desc'] = DemandEnum::getStatusDesc($item['status']);
-            $item['price_type_desc'] = DemandPriceTypeEnum::getTypeDesc($item['price_type']);
-            $item['price_display'] = self::formatPriceDisplay($item);
-            $item['category_name'] = $item['category']['name'] ?? '';
-
-            // 承接者信息
-            if (!empty($item['acceptor'])) {
-                $item['accept_user'] = [
-                    'id' => $item['acceptor']['id'],
-                    'nickname' => $item['acceptor']['nickname'],
-                    'avatar' => $item['acceptor']['avatar'],
-                    'mobile' => self::hideMobile($item['acceptor']['mobile']),
-                ];
-            } else {
-                $item['accept_user'] = null;
-            }
-
-            if (!empty($item['accept_time'])) {
-                $item['accept_time_format'] = date('Y.m.d H:i', $item['accept_time']);
-            }
-
-            unset($item['category'], $item['acceptor']);
-        }
-
-        return [
-            'list' => $list,
-            'count' => $count,
-            'page_no' => $page,
-            'page_size' => $size,
-        ];
-    }
-
-    /**
-     * 我承接的需求（需登录）
-     */
-    public static function myAccept(int $userId, array $params): array
-    {
-        $where = [
-            ['accept_user_id', '=', $userId],
-        ];
-
-        // 状态筛选
-        if (isset($params['status']) && $params['status'] !== '' && $params['status'] !== null) {
-            $where[] = ['status', '=', $params['status']];
-        }
-
-        $page = $params['page_no'] ?? 1;
-        $size = $params['page_size'] ?? 10;
 
         $count = Demand::where($where)->count();
         $list = Demand::where($where)
@@ -565,12 +509,13 @@ class DemandLogic extends BaseLogic
             }, 'community' => function($query) {
                 $query->field('id,name');
             }])
-            ->field('id,demand_no,title,images,amount,price_type,status,accept_time,create_time,category_id,community_id,address,contact_name,contact_phone,user_id')
+            ->field('id,demand_no,title,description,images,amount,price_type,hours,hour_price,min_amount,max_amount,status,is_urgent,accept_time,create_time,category_id,community_id,address,user_id')
             ->page($page, $size)
-            ->order(['accept_time' => 'desc'])
+            ->order([$type === 'publish' ? 'create_time' : 'accept_time' => 'desc'])
             ->select()
             ->toArray();
 
+        // 统一格式化
         foreach ($list as &$item) {
             $item['status_desc'] = DemandEnum::getStatusDesc($item['status']);
             $item['price_type_desc'] = DemandPriceTypeEnum::getTypeDesc($item['price_type']);
@@ -578,8 +523,8 @@ class DemandLogic extends BaseLogic
             $item['category_name'] = $item['category']['name'] ?? '';
             $item['community_name'] = $item['community']['name'] ?? '';
 
-            // 发布者信息
-            $item['publish_user'] = [
+            // 统一使用 user_info 返回发布者信息
+            $item['user_info'] = [
                 'id' => $item['publisher']['id'] ?? 0,
                 'nickname' => $item['publisher']['nickname'] ?? '',
                 'avatar' => $item['publisher']['avatar'] ?? '',
@@ -632,11 +577,11 @@ class DemandLogic extends BaseLogic
 
         switch ($priceType) {
             case DemandPriceTypeEnum::TYPE_HOURLY:
-                return '¥' . $data['hour_price'] . '/小时 × ' . $data['hours'] . '小时';
+                return '¥' . ($data['hour_price'] ?? 0) . '/小时 × ' . ($data['hours'] ?? 0) . '小时';
             case DemandPriceTypeEnum::TYPE_FIXED:
-                return '¥' . $data['amount'] . '/次';
+                return '¥' . ($data['amount'] ?? 0) . '/次';
             case DemandPriceTypeEnum::TYPE_RANGE:
-                return '¥' . $data['min_amount'] . ' ~ ¥' . $data['max_amount'];
+                return '¥' . ($data['min_amount'] ?? 0) . ' ~ ¥' . ($data['max_amount'] ?? 0);
             default:
                 return '¥' . ($data['amount'] ?? 0);
         }
