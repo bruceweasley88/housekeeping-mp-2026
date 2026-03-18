@@ -95,3 +95,8 @@ export function getMyDemandList(params: {
 }) {
     return request.get({ url: '/demand/myList', data: params }, { isAuth: true })
 }
+
+// 删除需求
+export function deleteDemand(id: number) {
+    return request.post({ url: '/demand/delete', data: { id } }, { isAuth: true })
+}

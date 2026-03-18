@@ -122,4 +122,17 @@ class DemandController extends BaseApiController
         $result = DemandLogic::myList($this->userId, $params);
         return $this->data($result);
     }
+
+    /**
+     * 删除需求（需登录）
+     */
+    public function delete()
+    {
+        $params = (new DemandValidate())->post()->goCheck('delete');
+        $result = DemandLogic::delete($this->userId, $params['id']);
+        if ($result === true) {
+            return $this->success('删除成功', [], 1, 1);
+        }
+        return $this->fail(DemandLogic::getError());
+    }
 }

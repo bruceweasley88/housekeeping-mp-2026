@@ -160,4 +160,12 @@ class DemandValidate extends BaseValidate
     {
         return $this->only(['type', 'status', 'page_no', 'page_size']);
     }
+
+    /**
+     * 删除需求场景
+     */
+    public function sceneDelete()
+    {
+        return $this->only(['id']);
+    }
 }

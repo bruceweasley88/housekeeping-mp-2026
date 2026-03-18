@@ -143,9 +143,9 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { onShow } from '@dcloudio/uni-app'
+import { onLoad, onShow } from '@dcloudio/uni-app'
 import { useUserStore } from '@/stores/user'
-import { getDemandCategoryLists, publishDemand, editDemand } from '@/api/demand'
+import { getDemandCategoryLists, getDemandDetail, publishDemand, editDemand, deleteDemand } from '@/api/demand'
 import { getUserVerifyDetail } from '@/api/userVerify'
 import { getUserAddress } from '@/api/community'
 import PricePopup from '@/components/price-popup/price-popup.vue'
@@ -168,8 +168,8 @@ const hasPhone = computed(() => {
 // 分类列表
 const categoryList = ref<any[]>([])
 
-// 协议勾选
-const agreedProtocol = ref(false)
+// 协议勾选（默认勾选）
+const agreedProtocol = ref(true)
 
 // 提交中状态
 const submitting = ref(false)
@@ -397,14 +397,18 @@ const handlePublish = async () => {
         let result
         if (isEdit.value && editId.value) {
             result = await editDemand({ ...submitData, id: editId.value })
+            // 编辑模式：返回上一页
+            uni.$u.toast('编辑成功')
+            setTimeout(() => {
+                uni.navigateBack()
+            }, 500)
         } else {
             result = await publishDemand(submitData)
+            // 新增模式：跳转成功页
+            uni.redirectTo({
+                url: `/pages/publish-success/publish-success?id=${result.id}&demand_no=${result.demand_no}`
+            })
         }
-
-        // 跳转到成功页面，传递需求ID和编号
-        uni.redirectTo({
-            url: `/pages/publish-success/publish-success?id=${result.id}&demand_no=${result.demand_no}`
-        })
     } catch (e) {
         console.error('发布失败', e)
     } finally {
@@ -413,18 +417,76 @@ const handlePublish = async () => {
 }
 
 // 删除（编辑模式下）
-const handleDelete = () => {
+const handleDelete = async () => {
     uni.showModal({
         title: '提示',
         content: '确定要删除该需求吗？',
-        success: (res) => {
+        success: async (res) => {
             if (res.confirm) {
-                // TODO: 调用删除接口
-                uni.navigateBack()
+                try {
+                    await deleteDemand(editId.value)
+                    uni.$u.toast('删除成功')
+                    uni.navigateBack()
+                } catch (e) {
+                    console.error('删除失败', e)
+                }
             }
         }
     })
 }
+
+// 加载需求详情（编辑模式）
+const fetchDemandDetail = async (id: number) => {
+    try {
+        const data = await getDemandDetail(id)
+
+        // 回填表单数据（金额字段转为数字）
+        formData.value = {
+            category_id: data.category_id || 0,
+            title: data.title || '',
+            description: data.description || '',
+            images: data.images || [],
+            price_type: data.price_type || 2,
+            hours: Number(data.hours) || 0,
+            hour_price: Number(data.hour_price) || 0,
+            amount: Number(data.amount) || 80,
+            min_amount: Number(data.min_amount) || 0,
+            max_amount: Number(data.max_amount) || 0,
+            community_id: data.community_id || 0,
+            address: data.address || '',
+            contact_name: data.contact_name || '',
+            contact_phone: data.contact_phone || '',
+            show_phone: data.show_phone || 0,
+            is_urgent: data.is_urgent || 0
+        }
+
+        // 更新价格显示
+        if (data.price_type === 1) {
+            priceType.value = 'hour'
+            displayPrice.value = Number(data.hour_price) || 80
+        } else if (data.price_type === 2) {
+            priceType.value = 'times'
+            displayPrice.value = Number(data.amount) || 80
+        } else {
+            priceType.value = 'range'
+            displayPrice.value = 80
+        }
+
+        // 编辑模式下默认勾选协议
+        agreedProtocol.value = true
+    } catch (e) {
+        console.error('加载需求详情失败', e)
+        uni.$u.toast('加载失败')
+    }
+}
+
+onLoad((options: any) => {
+    if (options.id) {
+        isEdit.value = true
+        editId.value = parseInt(options.id)
+        fetchDemandDetail(options.id)
+    }
+})
 
 onMounted(() => {
     fetchCategories()

@@ -270,6 +270,12 @@ class DemandLogic extends BaseLogic
                 return false;
             }
 
+            // 计算服务费率
+            $serviceRate = 0;
+            if (!empty($params['is_urgent']) && $params['is_urgent'] == 1) {
+                $serviceRate = 3.00; // 紧急发布收取3%
+            }
+
             // 更新需求
             $demand->save([
                 'category_id' => $params['category_id'],
@@ -287,6 +293,8 @@ class DemandLogic extends BaseLogic
                 'contact_name' => $params['contact_name'],
                 'contact_phone' => $params['contact_phone'],
                 'show_phone' => $params['show_phone'] ?? 0,
+                'is_urgent' => $params['is_urgent'] ?? 0,
+                'service_rate' => $serviceRate,
             ]);
 
             return true;
@@ -602,6 +610,36 @@ class DemandLogic extends BaseLogic
             return 'acceptor';
         }
         return 'stranger';
+    }
+
+    /**
+     * 删除需求（需登录）
+     */
+    public static function delete(int $userId, int $id): bool
+    {
+        try {
+            $demand = Demand::where('id', $id)->findOrEmpty();
+            if ($demand->isEmpty()) {
+                throw new \Exception('需求不存在');
+            }
+
+            // 验证是否是发布者
+            if ($demand->user_id != $userId) {
+                throw new \Exception('无权删除该需求');
+            }
+
+            // 验证状态（只有待接单状态可删除）
+            if ($demand->status != DemandEnum::STATUS_PENDING) {
+                throw new \Exception('当前状态不允许删除');
+            }
+
+            // 软删除
+            $demand->delete();
+            return true;
+        } catch (\Exception $e) {
+            self::setError($e->getMessage());
+            return false;
+        }
     }
 
     /**
