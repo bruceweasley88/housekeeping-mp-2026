@@ -281,7 +281,7 @@ onMounted(() => {
 .form-item {
     display: flex;
     align-items: center;
-    padding: 36rpx 0;
+    padding: 36rpx 0 16rpx;
 
     .label {
         font-size: 33rpx;
@@ -296,6 +296,7 @@ onMounted(() => {
         display: flex;
         align-items: center;
         margin-left: 40rpx;
+        padding-bottom: 20rpx;
         border-bottom: 1rpx solid #F5F5F5;
     }
 

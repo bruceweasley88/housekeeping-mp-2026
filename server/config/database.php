@@ -34,7 +34,12 @@ return [
             // 端口
             'hostport'        => env('database.hostport', '3306'),
             // 数据库连接参数
-            'params'          => [],
+            'params'          => [
+                // 持久连接
+                \PDO::ATTR_PERSISTENT => false,
+                // 错误模式为抛出异常
+                \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+            ],
             // 数据库编码默认采用utf8
             'charset'         => env('database.charset', 'utf8mb4'),
             // 数据库表前缀
@@ -50,7 +55,9 @@ return [
             // 是否严格检查字段是否存在
             'fields_strict'   => true,
             // 是否需要断线重连
-            'break_reconnect' => false,
+            'break_reconnect' => true,
+            // 断线重连最大次数
+            'break_match_str' => [],
             // 监听SQL
             'trigger_sql'     => env('app_debug', true),
             // 开启字段缓存

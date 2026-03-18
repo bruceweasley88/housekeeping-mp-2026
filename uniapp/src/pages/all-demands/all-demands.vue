@@ -41,32 +41,46 @@
     </view>
 
     <!-- 需求列表 -->
-    <view class="demand-list">
+    <scroll-view
+      class="demand-list"
+      scroll-y
+      @scrolltolower="handleLoadMore"
+    >
       <view v-if="demandList.length === 0 && !loading" class="empty-tip">
         <text>暂无需求</text>
+      </view>
+      <view v-if="loading && demandList.length === 0" class="loading-wrap">
+        <u-loadmore status="loading" />
       </view>
       <demand-card
         v-for="item in demandList"
         :key="item.id"
-        :tag="item.is_urgent === 1 ? '紧急' : ''"
+        :is-urgent="item.is_urgent"
         :title="item.title"
         :location="item.address"
         :description="item.description"
-        :priceType="item.price_type"
+        :price-type="item.price_type"
         :amount="item.amount"
-        :hourPrice="item.hour_price"
-        :minAmount="item.min_amount"
-        :maxAmount="item.max_amount"
+        :hour-price="item.hour_price"
+        :min-amount="item.min_amount"
+        :max-amount="item.max_amount"
         :image="item.images?.[0] || ''"
         :avatar="item.user_info?.avatar || ''"
         :username="item.user_info?.nickname || ''"
-        :publishTime="formatPublishTime(item.create_time)"
-        actionText="承接需求"
-        @cardClick="handleTakeOrder(item)"
+        :create-time="item.create_time"
+        action-text="查看详情"
+        @card-click="handleTakeOrder(item)"
         @action="handleTakeOrder(item)"
-        @location="handleLocationClick(item)"
       />
-    </view>
+      <!-- 加载更多状态 -->
+      <u-loadmore
+        v-if="demandList.length > 0"
+        :status="loading ? 'loading' : (hasMore ? 'loadmore' : 'nomore')"
+        load-text="上拉加载更多"
+        nomore-text="没有更多了"
+        @loadmore="handleLoadMore"
+      />
+    </scroll-view>
   </view>
 </template>
 
@@ -74,6 +88,7 @@
 import { ref, onMounted } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { getDemandCategoryLists, getDemandLists } from '@/api/demand'
+import { getUserAddress } from '@/api/community'
 
 // 分类列表
 const categoryList = ref<{ id: number; name: string; icon: string }[]>([])
@@ -87,8 +102,17 @@ const demandList = ref<any[]>([])
 // 搜索关键词
 const keyword = ref('')
 
+// 用户小区ID
+const communityId = ref<number | null>(null)
+
 // 加载状态
 const loading = ref(false)
+
+// 分页相关
+const pageNo = ref(1)
+const pageSize = 10
+const hasMore = ref(true)
+const total = ref(0)
 
 // 加载分类列表
 const fetchCategoryList = async () => {
@@ -106,11 +130,33 @@ const fetchCategoryList = async () => {
   }
 }
 
-// 加载需求列表
-const fetchDemandList = async () => {
-  loading.value = true
+// 获取用户地址
+const fetchUserAddress = async () => {
   try {
-    const params: any = {}
+    const res = await getUserAddress()
+    if (res && res.community_id) {
+      communityId.value = res.community_id
+    }
+  } catch (e) {
+    communityId.value = null
+  }
+}
+
+// 加载需求列表
+const fetchDemandList = async (isLoadMore = false) => {
+  if (!isLoadMore) {
+    loading.value = true
+    pageNo.value = 1
+  }
+  try {
+    const params: any = {
+      page_no: pageNo.value,
+      page_size: pageSize
+    }
+    // 传递小区ID
+    if (communityId.value) {
+      params.community_id = communityId.value
+    }
     // 只有非0的分类ID才传递
     if (currentCategoryId.value !== 0) {
       params.category_id = currentCategoryId.value
@@ -121,12 +167,29 @@ const fetchDemandList = async () => {
     }
 
     const res = await getDemandLists(params)
-    demandList.value = res?.list || []
+    const list = res?.list || []
+    total.value = res?.count || 0
+
+    if (isLoadMore) {
+      demandList.value = [...demandList.value, ...list]
+    } else {
+      demandList.value = list
+    }
+    // 判断是否还有更多
+    hasMore.value = demandList.value.length < total.value
   } catch (e) {
     demandList.value = []
+    hasMore.value = false
   } finally {
     loading.value = false
   }
+}
+
+// 加载更多
+const handleLoadMore = () => {
+  if (loading.value || !hasMore.value) return
+  pageNo.value++
+  fetchDemandList(true)
 }
 
 // 分类切换
@@ -149,43 +212,18 @@ const handleTakeOrder = (item: any) => {
   })
 }
 
-// 地址点击
-const handleLocationClick = (item: any) => {
-  uni.showToast({
-    title: '查看位置',
-    icon: 'none'
-  })
-}
-
-// 格式化发布时间
-const formatPublishTime = (time: number | string): string => {
-  if (!time) return ''
-  let date: Date
-  if (typeof time === 'number') {
-    // Unix 时间戳（秒）
-    date = new Date(time * 1000)
-  } else {
-    // 日期字符串
-    date = new Date(time)
-  }
-  if (isNaN(date.getTime())) return ''
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  const hour = String(date.getHours()).padStart(2, '0')
-  const minute = String(date.getMinutes()).padStart(2, '0')
-  return `发布于${year}.${month}.${day} ${hour}:${minute}`
-}
-
 // 页面加载
 onLoad((options) => {
   // 获取传入的分类ID
   const categoryId = options?.category_id ? parseInt(options.category_id) : 0
   currentCategoryId.value = categoryId
 
-  // 加载分类和需求
+  // 先加载分类
   fetchCategoryList()
-  fetchDemandList()
+  // 获取用户地址后再加载需求
+  fetchUserAddress().then(() => {
+    fetchDemandList()
+  })
 })
 </script>
 
@@ -285,13 +323,23 @@ onLoad((options) => {
 
   // 需求列表
   .demand-list {
-    padding: 0 30rpx 30rpx;
+    height: calc(100vh - 220rpx);
 
     .empty-tip {
       text-align: center;
       padding: 100rpx 0;
       color: #999;
       font-size: 28rpx;
+    }
+
+    .loading-wrap {
+      padding: 60rpx 0;
+    }
+
+    // 给卡片添加左右边距
+    :deep(.demand-card) {
+      margin-left: 30rpx;
+      margin-right: 30rpx;
     }
   }
 }

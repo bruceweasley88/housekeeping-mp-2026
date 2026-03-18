@@ -2,7 +2,7 @@
     <view class="demand-card" @click="handleCardClick">
         <!-- 顶部：标签 + 标题 + 地址 -->
         <view class="card-header">
-            <view class="tag" v-if="tag">{{ tag }}</view>
+            <view class="tag" v-if="showUrgentTag">紧急</view>
             <text class="title">{{ title }}</text>
             <view class="location" @click="handleLocationClick">
                 <text class="location-text">{{ location }}</text>
@@ -33,7 +33,7 @@
                 <image class="avatar" :src="avatar || '/static/index_page/icon_avatar_default.png'" mode="aspectFill"/>
                 <view class="user-text">
                     <text class="username">{{ username }}</text>
-                    <text class="publish-time">{{ publishTime }}</text>
+                    <text class="publish-time">{{ formatPublishTime(createTime) }}</text>
                 </view>
             </view>
             <view class="action-btn" @click="handleAction">{{ actionText }}</view>
@@ -45,10 +45,10 @@
 import { computed } from 'vue'
 
 const props = defineProps({
-    // 标签（如：紧急）
-    tag: {
-        type: String,
-        default: ''
+    // 是否紧急
+    isUrgent: {
+        type: [Number, Boolean],
+        default: 0
     },
     // 标题
     title: {
@@ -116,8 +116,8 @@ const props = defineProps({
         default: ''
     },
     // 发布时间
-    publishTime: {
-        type: String,
+    createTime: {
+        type: [Number, String],
         default: ''
     },
     // 按钮文字
@@ -160,6 +160,34 @@ const computedPrice = computed(() => {
     }
 })
 
+// 是否显示紧急标签
+const showUrgentTag = computed(() => {
+    return props.isUrgent === 1 || props.isUrgent === true
+})
+
+// 格式化发布时间
+const formatPublishTime = (time: number | string): string => {
+    if (!time) return ''
+    let date: Date
+    if (typeof time === 'number') {
+        // Unix 时间戳（秒）
+        date = new Date(time * 1000)
+    } else if (typeof time === 'string') {
+        // 字符串格式 "2026-03-10 10:00:00" 或 "2026/03/10T10:00:00"
+        const dateStr = time.replace(/-/g, '/')
+        date = new Date(dateStr)
+    } else {
+        date = new Date(time)
+    }
+    if (isNaN(date.getTime())) return ''
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hour = String(date.getHours()).padStart(2, '0')
+    const minute = String(date.getMinutes()).padStart(2, '0')
+    return `发布于${year}.${month}.${day} ${hour}:${minute}`
+}
+
 const emit = defineEmits(['action', 'location', 'cardClick'])
 
 const handleCardClick = () => {
@@ -190,11 +218,11 @@ const handleLocationClick = () => {
 
     .tag {
         background: #F04530;
-        border-radius: 5rpx;
-        padding: 4rpx 7rpx;
+        border-radius: 10rpx;
+        padding: 4rpx 10rpx;
         font-size: 25rpx;
         color: #fff;
-        margin-right: 5rpx;
+        margin-right: 8rpx;
         flex-shrink: 0;
     }
 
@@ -203,7 +231,7 @@ const handleLocationClick = () => {
         font-weight: 500;
         color: #222929;
         flex-shrink: 0;
-        max-width: 280rpx;
+        max-width: 330rpx;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -217,6 +245,10 @@ const handleLocationClick = () => {
         .location-text {
             font-size: 25rpx;
             color: #9CA6A6;
+            max-width: 180rpx;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .arrow-icon {

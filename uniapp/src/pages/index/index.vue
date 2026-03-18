@@ -45,12 +45,39 @@
         <!-- 最新需求 -->
         <view class="demand-section">
             <text class="section-title">最新需求</text>
-            <demand-card tag="紧急" title="小三数学家教2小时" location="保利天悦A10"
-                description="需要找小学三年级数学家教，周六日两天晚上19:00-21:00上课，合适的可长期…"
-                :priceType="1"
-                :hourPrice="150"
-                image="/static/index_page/img_demand_1.png" username="小伟妈妈" publishTime="发布于2026.01.02 12:00"
-                @action="handleTakeTask" />
+
+            <!-- 未选择小区提示 -->
+            <view v-if="!communityId" class="empty-tip select-tip" @click="handleSelectCommunity">
+                <text>请选择小区查看相关内容</text>
+            </view>
+
+            <!-- 空状态 -->
+            <view v-else-if="latestDemandList.length === 0" class="empty-tip">
+                <text>暂无需求</text>
+            </view>
+
+            <!-- 需求列表 -->
+            <demand-card
+                v-for="item in latestDemandList"
+                v-else
+                :key="item.id"
+                :is-urgent="item.is_urgent"
+                :title="item.title"
+                :location="item.address"
+                :description="item.description"
+                :price-type="item.price_type"
+                :amount="item.amount"
+                :hour-price="item.hour_price"
+                :min-amount="item.min_amount"
+                :max-amount="item.max_amount"
+                :image="item.images?.[0] || ''"
+                :avatar="item.user_info?.avatar || ''"
+                :username="item.user_info?.nickname || ''"
+                :create-time="item.create_time"
+                action-text="查看详情"
+                @card-click="handleTakeTask(item)"
+                @action="handleTakeTask(item)"
+            />
         </view>
 
         <!--  #ifdef MP  -->
@@ -68,9 +95,9 @@
 <script setup lang="ts">
 import { getIndex } from '@/api/shop'
 import { getUserAddress } from '@/api/community'
-import { getDemandCategoryLists } from '@/api/demand'
-import { onLoad, onShow } from "@dcloudio/uni-app";
-import { computed, reactive, ref, watch } from 'vue'
+import { getDemandCategoryLists, getDemandLists } from '@/api/demand'
+import { onLoad, onShow, onReady } from "@dcloudio/uni-app";
+import { computed, reactive, ref, watch, onMounted, onUnmounted } from 'vue'
 import LSwiper from '@/components/l-swiper/l-swiper.vue'
 import { useUserStore } from '@/stores/user'
 
@@ -93,9 +120,13 @@ const state = reactive<{
 
 // 用户地址信息
 const addressText = ref('')
+const communityId = ref<number | null>(null)
 
 // 需求分类列表
 const categoryList = ref<{ id: number; name: string; icon: string }[]>([])
+
+// 最新需求列表
+const latestDemandList = ref<any[]>([])
 
 // 获取分类列表（添加"全部"静态项）
 const fetchCategoryList = async () => {
@@ -114,6 +145,20 @@ const fetchCategoryList = async () => {
     }
 }
 
+// 获取最新需求列表（最多15条）
+const fetchLatestDemands = async () => {
+    try {
+        const params: any = { page_size: 15 }
+        if (communityId.value) {
+            params.community_id = communityId.value
+        }
+        const res = await getDemandLists(params)
+        latestDemandList.value = res?.list || []
+    } catch (e) {
+        latestDemandList.value = []
+    }
+}
+
 // 获取分类图标完整路径
 const getCategoryIcon = (icon: string) => {
     return `/static/index_page/${icon}`
@@ -121,6 +166,14 @@ const getCategoryIcon = (icon: string) => {
 
 // 分类点击事件
 const handleCategoryClick = (item: { id: number; name: string }) => {
+    // 未选择小区时提示
+    if (!communityId.value) {
+        uni.showToast({
+            title: '请选择小区',
+            icon: 'none'
+        })
+        return
+    }
     uni.navigateTo({
         url: `/pages/all-demands/all-demands?category_id=${item.id}`
     })
@@ -144,6 +197,9 @@ const fetchUserAddress = async () => {
     try {
         const res = await getUserAddress()
         if (res && res.community_name) {
+            // 保存 community_id
+            communityId.value = res.community_id
+
             // 显示小区名 + 楼号 + 门牌号
             const parts = [res.community_name]
             if (res.building) parts.push(res.building)
@@ -153,17 +209,43 @@ const fetchUserAddress = async () => {
     } catch (e) {
         // 未登录或无地址信息
         addressText.value = ''
+        communityId.value = null
     }
 }
 
 
+// 封装首页数据加载方法
+const loadPageData = async () => {
+    // 先并行加载不依赖地址的数据
+    await Promise.all([
+        getData(),
+        fetchCategoryList(),
+        fetchUserAddress()
+    ])
+    // 获取地址后再加载需求列表（需要 community_id）
+    await fetchLatestDemands()
+}
+
 onLoad(() => {
-    getData()
-    fetchCategoryList()
+    loadPageData()
 })
 
-// 每次显示页面时刷新地址
-onShow(() => { fetchUserAddress() })
+// 每次显示页面时刷新数据
+onShow(() => {
+    loadPageData()
+})
+
+// 监听登录成功事件
+onMounted(() => {
+    uni.$on('loginSuccess', () => {
+        loadPageData()
+    })
+})
+
+// 组件销毁时移除监听
+onUnmounted(() => {
+    uni.$off('loginSuccess')
+})
 
 // 跳转选择小区页面
 const handleSelectCommunity = () => {
@@ -188,6 +270,14 @@ watch(
 )
 
 const handlePublish = () => {
+    // 未选择小区时提示
+    if (!communityId.value) {
+        uni.showToast({
+            title: '请选择小区',
+            icon: 'none'
+        })
+        return
+    }
     uni.navigateTo({
         url: '/pages/publish-demand/publish-demand'
     })
@@ -205,11 +295,12 @@ const handleLoginCancel = () => {
     console.log('暂不登录')
 }
 
-const handleTakeTask = () => {
-    uni.showToast({
-        title: '接取任务',
-        icon: 'none'
-    })
+const handleTakeTask = (item: any) => {
+    if (item?.id) {
+        uni.navigateTo({
+            url: `/pages/demand/demand?id=${item.id}`
+        })
+    }
 }
 </script>
 
@@ -236,6 +327,10 @@ const handleTakeTask = () => {
         font-size: 28rpx;
         color: #222929;
         font-weight: 500;
+        max-width: 500rpx;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .address-arrow {
@@ -291,7 +386,7 @@ const handleTakeTask = () => {
     }
 
     .flow-label-placeholder {
-        width: 100rpx;
+        width: 66rpx;
         margin-right: 20rpx;
         flex-shrink: 0;
         align-self: stretch;
@@ -306,7 +401,7 @@ const handleTakeTask = () => {
     }
 
     .step {
-        font-size: 24rpx;
+        font-size: 26rpx;
         color: #222929;
     }
 
@@ -375,6 +470,17 @@ const handleTakeTask = () => {
         color: #222929;
         margin-bottom: 20rpx;
         display: block;
+    }
+
+    .empty-tip {
+        text-align: center;
+        padding: 60rpx 0;
+        color: #9CA6A6;
+        font-size: 28rpx;
+
+        &.select-tip {
+            color: #00A2A0;
+        }
     }
 }
 </style>

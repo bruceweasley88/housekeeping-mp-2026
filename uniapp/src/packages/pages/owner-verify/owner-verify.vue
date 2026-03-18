@@ -33,28 +33,11 @@
         </view>
 
         <!-- 已上传的材料预览 -->
-        <view v-if="materials.length > 0" class="materials-preview">
-            <view
-                v-for="(item, index) in materials"
-                :key="index"
-                class="material-item"
-            >
-                <image class="material-image" :src="item" mode="aspectFill" />
-                <view class="material-delete" @click="removeMaterial(index)">
-                    <text class="delete-text">×</text>
-                </view>
-            </view>
-        </view>
-
-        <!-- 上传按钮卡片 -->
-        <view class="upload-card" @click="handleUpload">
-            <image
-                class="upload-icon"
-                src="/packages/static/images/img_upload.png"
-                mode="aspectFit"
-            />
-            <text class="upload-text">立即上传</text>
-        </view>
+        <image-upload
+            v-model="materials"
+            :max-count="9"
+            :disabled="status === 0 || status === 1"
+        />
 
         <!-- 说明文字 -->
         <text class="description">业主认证通过后，才能发布和承接需求</text>
@@ -78,6 +61,7 @@ import { ref, computed, onMounted } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { submitUserVerify, getUserVerifyDetail } from '@/api/userVerify'
 import { uploadImage } from '@/api/app'
+import ImageUpload from '@/components/image-upload/image-upload.vue'
 
 // 状态: null=未提交, 0=待审核, 1=已通过, 2=已拒绝
 const status = ref<number | null>(null)
@@ -138,6 +122,11 @@ const fetchDetail = async () => {
                 idcardFront.value = ''
                 idcardBack.value = ''
                 materials.value = []
+            } else {
+                // 待审核或已通过时，回显图片
+                idcardFront.value = res.idcard_front || ''
+                idcardBack.value = res.idcard_back || ''
+                materials.value = res.verify_materials || []
             }
         } else {
             status.value = null
@@ -203,36 +192,6 @@ const handleCaptureBack = () => {
             console.log('选择图片失败:', err)
         }
     })
-}
-
-// 上传证明材料
-const handleUpload = () => {
-    console.log('点击上传材料，当前状态:', status.value)
-    if (status.value === 0 || status.value === 1) {
-        console.log('状态不允许操作')
-        return
-    }
-    const remainCount = 9 - materials.value.length
-    if (remainCount <= 0) {
-        uni.$u.toast('最多上传9张')
-        return
-    }
-    uni.chooseImage({
-        count: remainCount,
-        sourceType: ['album', 'camera'],
-        success: async (res) => {
-            for (const filePath of res.tempFilePaths) {
-                const uri = await uploadImageFile(filePath)
-                materials.value.push(uri)
-            }
-        }
-    })
-}
-
-// 删除材料
-const removeMaterial = (index: number) => {
-    if (status.value === 0 || status.value === 1) return
-    materials.value.splice(index, 1)
 }
 
 // 提交认证
@@ -349,68 +308,6 @@ onShow(() => {
 .section-subtitle {
     font-size: 27rpx;
     color: #999999;
-}
-
-.materials-preview {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15rpx;
-    margin-bottom: 22rpx;
-}
-
-.material-item {
-    width: 146rpx;
-    height: 146rpx;
-    border-radius: 15rpx;
-    overflow: hidden;
-    position: relative;
-}
-
-.material-image {
-    width: 100%;
-    height: 100%;
-}
-
-.material-delete {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 36rpx;
-    height: 36rpx;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 0 0 0 15rpx;
-}
-
-.delete-text {
-    color: #ffffff;
-    font-size: 28rpx;
-    line-height: 1;
-}
-
-.upload-card {
-    width: 146rpx;
-    height: 146rpx;
-    background-color: #ffffff;
-    border-radius: 15rpx;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
-
-.upload-icon {
-    width: 54rpx;
-    height: 44rpx;
-}
-
-.upload-text {
-    font-size: 25rpx;
-    font-weight: 500;
-    color: #444444;
-    margin-top: 12rpx;
 }
 
 .description {

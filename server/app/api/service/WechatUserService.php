@@ -106,7 +106,12 @@ class WechatUserService
         if (!$this->user->isEmpty()) {
             $this->getToken();
         }
-        return $this->user->toArray();
+        $result = $this->user->toArray();
+        // 确保 is_new_user 字段被返回，默认为新用户
+        if (!isset($result['is_new_user'])) {
+            $result['is_new_user'] = YesNoEnum::YES;
+        }
+        return $result;
     }
 
 

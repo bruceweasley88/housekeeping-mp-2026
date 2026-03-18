@@ -1,64 +1,70 @@
 <template>
     <u-popup v-model="showPopup" mode="bottom" border-radius="29" :mask-close-able="false">
         <view class="login-popup">
-            <!-- 标题 -->
-            <text class="title">{{ title || '请完善您的资料' }}</text>
-
-            <!-- 头像区域 -->
-            <view class="avatar-wrapper">
-                <avatar-upload
-                    v-model="avatarUrl"
-                    :size="164"
-                    round
-                    @update:modelValue="handleAvatarChange"
-                />
-            </view>
-
-            <!-- 昵称输入 -->
-            <view class="nickname-row">
-                <text class="label">昵称</text>
-                <input
-                    class="nickname-input"
-                    type="nickname"
-                    :value="nickname"
-                    placeholder="请输入你的昵称"
-                    @input="handleNicknameInput"
-                />
-            </view>
-
-            <!-- 隐私协议 -->
-            <view class="privacy-row">
-                <view class="checkbox" :class="{ checked: agreed }" @click="agreed = !agreed">
-                    <text v-if="agreed" class="checkbox-icon">✓</text>
+            <!-- 加载中状态 -->
+            <template v-if="loginState === 'loading'">
+                <view class="loading-state">
+                    <u-loading mode="circle" size="80"></u-loading>
+                    <text class="loading-text">正在登录...</text>
                 </view>
-                <text class="privacy-text">
-                    已阅读并且同意<text class="privacy-link" @click="handlePrivacyClick">《用户隐私协议》</text>，用户数据将用于个人信息展示与功能正常使用。
-                </text>
-            </view>
+            </template>
 
-            <!-- 确定按钮 -->
-            <view
-                class="confirm-btn"
-                :class="{ disabled: loading }"
-                @click="handleConfirm"
-            >
-                <text class="confirm-text">{{ loading ? '提交中...' : '确定' }}</text>
-            </view>
+            <!-- 表单状态 -->
+            <template v-else>
+                <!-- 标题 -->
+                <text class="title">{{ title || '请完善您的资料' }}</text>
 
-            <!-- 暂不登录 -->
-            <text class="skip-text" @click="handleCancel">暂不登录</text>
+                <!-- 头像区域 -->
+                <view class="avatar-wrapper">
+                    <avatar-upload
+                        v-model="avatarUrl"
+                        :size="164"
+                        round
+                        @update:modelValue="handleAvatarChange"
+                    />
+                </view>
 
-            <!-- 测试账号登录（仅在开发环境显示） -->
-            <view v-if="isDev" class="test-login-row">
-                <text class="test-login-text" @click="handleTestLogin">测试账号登录</text>
-            </view>
+                <!-- 昵称输入 -->
+                <view class="nickname-row">
+                    <text class="label">昵称</text>
+                    <input
+                        class="nickname-input"
+                        type="nickname"
+                        :value="nickname"
+                        placeholder="请输入你的昵称"
+                        @input="handleNicknameInput"
+                    />
+                </view>
+
+                <!-- 隐私协议 -->
+                <view class="privacy-row">
+                    <view class="checkbox" :class="{ checked: agreed }" @click="agreed = !agreed">
+                        <text v-if="agreed" class="checkbox-icon">✓</text>
+                    </view>
+                    <text class="privacy-text">
+                        已阅读并且同意<text class="privacy-link" @click="handlePrivacyClick">《用户隐私协议》</text>，用户数据将用于个人信息展示与功能正常使用。
+                    </text>
+                </view>
+
+                <!-- 确定按钮 -->
+                <view
+                    class="confirm-btn"
+                    :class="{ disabled: loginState === 'submitting' }"
+                    @click="handleConfirm"
+                >
+                    <text class="confirm-text">{{ loginState === 'submitting' ? '提交中...' : '确定' }}</text>
+                </view>
+
+                <!-- 暂不登录 -->
+                <text class="skip-text" @click="handleCancel">暂不登录</text>
+            </template>
         </view>
     </u-popup>
 </template>
 
 <script setup lang="ts">
 import { computed, ref, onMounted, watch } from 'vue'
-import { mnpLogin, updateUser, login } from '@/api/account'
+import { mnpLogin, updateUser } from '@/api/account'
 import { useUserStore } from '@/stores/user'
 
 const props = defineProps({
@@ -92,12 +98,15 @@ const showPopup = computed({
 })
 
 const userStore = useUserStore()
-const isDev = computed(() => process.env.NODE_ENV === 'development')
 const temToken = ref('')
 const avatarUrl = ref('')
 const nickname = ref('')
 const agreed = ref(false)
-const loading = ref(false)
+
+// 登录状态：'loading' | 'form' | 'submitting'
+const loginState = ref<'loading' | 'form' | 'submitting'>('loading')
+// 是否是新用户
+const isNewUser = ref(true)
 
 // 组件挂载时自动获取微信登录凭证
 onMounted(async () => {
@@ -115,13 +124,40 @@ watch(() => props.show, async (val) => {
 // 初始化登录，获取临时 token
 const initLogin = async () => {
     try {
-        const { code } = await uni.login({ provider: 'weixin' })
+        loginState.value = 'loading'
+        const loginRes = await uni.login({ provider: 'weixin' })
+        console.log('uni.login 返回:', loginRes)
+        const { code } = loginRes
+        if (!code) {
+            console.error('获取 code 失败:', loginRes)
+            uni.$u.toast('获取微信登录凭证失败')
+            loginState.value = 'form'
+            return
+        }
         const data = await mnpLogin({ code })
+        console.log('mnpLogin 返回:', data)
         temToken.value = data.token
         // 设置到 store，供 avatar-upload 组件使用
         userStore.temToken = data.token
+
+        // 判断是否是新用户（is_new_user: 0 表示已注册，1 表示新用户）
+        isNewUser.value = data.is_new_user !== 0
+
+        if (!isNewUser.value) {
+            // 已注册用户，直接登录
+            userStore.login(temToken.value)
+            emit('success', { token: temToken.value })
+            showPopup.value = false
+            // 通知首页刷新数据
+            uni.$emit('loginSuccess')
+        } else {
+            // 新用户，显示表单
+            loginState.value = 'form'
+        }
     } catch (error: any) {
-        uni.$u.toast('登录初始化失败，请重试')
+        console.error('initLogin 错误:', error)
+        loginState.value = 'form'  // 出错时也显示表单
+        uni.$u.toast(error?.message || error || '登录初始化失败，请重试')
     }
 }
 
@@ -157,7 +193,7 @@ const handleConfirm = async () => {
         return
     }
 
-    loading.value = true
+    loginState.value = 'submitting'
     try {
         await updateUser({
             nickname: nickname.value.trim(),
@@ -168,10 +204,12 @@ const handleConfirm = async () => {
         userStore.login(temToken.value)
         emit('success', { token: temToken.value })
         showPopup.value = false
+        // 通知首页刷新数据
+        uni.$emit('loginSuccess')
     } catch (error: any) {
         uni.$u.toast(error || '提交失败')
     } finally {
-        loading.value = false
+        loginState.value = 'form'
     }
 }
 
@@ -179,23 +217,6 @@ const handleConfirm = async () => {
 const handleCancel = () => {
     emit('cancel')
     showPopup.value = false
-}
-
-// 测试账号登录（仅在开发环境使用）
-const handleTestLogin = async () => {
-    try {
-        const data = await login({
-            account: 'wx6688',
-            password: 'wx123456',
-            scene: 1  // 账号密码登录
-        })
-        userStore.login(data.token)
-        emit('success', { token: data.token })
-        showPopup.value = false
-        uni.$u.toast('测试账号登录成功')
-    } catch (error: any) {
-        uni.$u.toast(error || '登录失败')
-    }
 }
 </script>
 
@@ -213,6 +234,20 @@ const handleTestLogin = async () => {
     font-weight: 500;
     color: #222929;
     margin-bottom: 22rpx;
+}
+
+.loading-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 100rpx 0;
+}
+
+.loading-text {
+    font-size: 28rpx;
+    color: #666;
+    margin-top: 30rpx;
 }
 
 .avatar-wrapper {
@@ -305,16 +340,5 @@ const handleTestLogin = async () => {
     text-align: center;
     font-size: 28rpx;
     color: #9CA6A6;
-}
-
-.test-login-row {
-    display: flex;
-    justify-content: center;
-    margin-top: 20rpx;
-
-    .test-login-text {
-        font-size: 28rpx;
-        color: #00A2A0;
-    }
 }
 </style>

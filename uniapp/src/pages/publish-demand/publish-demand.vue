@@ -17,6 +17,7 @@
                     <input
                         class="title-input"
                         v-model="formData.title"
+                        :disabled="!isVerified"
                         placeholder="简单描述 例:找初三英语家教2小时"
                         placeholder-style="color: #DADADA; font-size: 33rpx;"
                         maxlength="30"
@@ -36,8 +37,8 @@
                         v-for="item in categoryList"
                         :key="item.id"
                         class="type-item"
-                        :class="{ selected: formData.category_id === item.id }"
-                        @click="handleSelectCategory(item.id)"
+                        :class="{ selected: formData.category_id === item.id, disabled: !isVerified }"
+                        @click="isVerified && handleSelectCategory(item.id)"
                     >
                         <text class="type-text" :class="{ selected: formData.category_id === item.id }">{{ item.name }}</text>
                     </view>
@@ -45,7 +46,7 @@
             </view>
 
             <!-- 需求金额 -->
-            <view class="form-item" @click="handlePriceClick">
+            <view class="form-item" @click="isVerified && handlePriceClick()">
                 <text class="form-label">需求金额</text>
                 <view class="price-row">
                     <template v-if="priceType === 'range'">
@@ -71,6 +72,7 @@
                 <textarea
                     class="desc-textarea"
                     v-model="formData.description"
+                    :disabled="!isVerified"
                     placeholder="描述需要帮忙的事请。例如丢垃圾、代买物品、取快递、代关门窗、宠物养护/上门喂养等。描述越清晰越好～"
                     placeholder-style="color: #9CA6A6; font-size: 27rpx;"
                     :maxlength="500"
@@ -83,33 +85,11 @@
                     <text class="form-label">上传照片</text>
                     <text class="upload-hint">例:电器维修部位</text>
                 </view>
-                <view class="upload-list">
-                    <view
-                        v-for="(img, index) in formData.images"
-                        :key="index"
-                        class="upload-item"
-                    >
-                        <image class="upload-img" :src="img" mode="aspectFill" />
-                        <view class="upload-delete" @click="handleDeleteImage(index)">
-                            <text class="delete-icon">×</text>
-                        </view>
-                    </view>
-                    <view
-                        v-if="formData.images.length < 9"
-                        class="upload-box"
-                        @click="handleUpload"
-                    >
-                        <view class="upload-icon">
-                            <view class="upload-icon-add"></view>
-                            <view class="upload-icon-circle"></view>
-                        </view>
-                        <text class="upload-text">立即上传</text>
-                    </view>
-                </view>
+                <image-upload v-model="formData.images" :max-count="9" :disabled="!isVerified" />
             </view>
 
             <!-- 是否紧急发布 -->
-            <view class="switch-item" @click="handleToggleUrgent">
+            <view class="switch-item" @click="isVerified && handleToggleUrgent()">
                 <view class="switch-info">
                     <text class="switch-label">是否紧急发布</text>
                     <text class="switch-hint">说明：紧急需求将收取3%的服务费，完成后收取。</text>
@@ -119,8 +99,8 @@
                 </view>
             </view>
 
-            <!-- 是否提供真实手机号 -->
-            <view class="switch-item" @click="handleToggleShowPhone">
+            <!-- 是否提供真实手机号 - 仅当有手机号时显示 -->
+            <view v-if="hasPhone" class="switch-item" @click="handleToggleShowPhone">
                 <text class="switch-label">是否提供真实手机号</text>
                 <view class="switch-off" :class="{ 'switch-on': formData.show_phone === 1 }">
                     <view class="switch-off-inner" :class="{ 'switch-on-inner': formData.show_phone === 1 }"></view>
@@ -163,12 +143,13 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 import { useUserStore } from '@/stores/user'
 import { getDemandCategoryLists, publishDemand, editDemand } from '@/api/demand'
 import { getUserVerifyDetail } from '@/api/userVerify'
 import { getUserAddress } from '@/api/community'
-import { uploadImage } from '@/api/app'
 import PricePopup from '@/components/price-popup/price-popup.vue'
+import ImageUpload from '@/components/image-upload/image-upload.vue'
 
 const userStore = useUserStore()
 
@@ -178,6 +159,11 @@ const editId = ref(0)
 
 // 是否已认证
 const isVerified = ref(false)
+
+// 是否有手机号
+const hasPhone = computed(() => {
+    return !!formData.value.contact_phone?.trim()
+})
 
 // 分类列表
 const categoryList = ref<any[]>([])
@@ -197,7 +183,7 @@ const formData = ref({
     price_type: 2,  // 1=按小时，2=按次，3=按范围
     hours: 0,
     hour_price: 0,
-    amount: 0,
+    amount: 80,  // 与 displayPrice 初始值保持一致
     min_amount: 0,
     max_amount: 0,
     community_id: 0,
@@ -236,6 +222,9 @@ const checkVerifyStatus = async () => {
 // 获取用户地址
 const fetchUserAddress = async () => {
     try {
+        // 先获取最新用户信息，确保手机号是最新的
+        await userStore.getUser()
+
         const data = await getUserAddress()
         if (data && data.community_id) {
             formData.value.community_id = data.community_id
@@ -284,41 +273,6 @@ const handlePriceConfirm = () => {
         formData.value.price_type = 3
         // min_amount 和 max_amount 已经通过 v-model 双向绑定更新
     }
-}
-
-// 图片上传
-const handleUpload = () => {
-    const remain = 9 - formData.value.images.length
-    if (remain <= 0) {
-        uni.$u.toast('最多上传9张图片')
-        return
-    }
-
-    uni.chooseImage({
-        count: remain,
-        sizeType: ['compressed'],
-        sourceType: ['album', 'camera'],
-        success: async (res) => {
-            uni.showLoading({ title: '上传中...' })
-            try {
-                for (const path of res.tempFilePaths) {
-                    const result = await uploadImage(path, userStore.token || undefined)
-                    if (result && result.uri) {
-                        formData.value.images.push(result.uri)
-                    }
-                }
-            } catch (e) {
-                uni.$u.toast('上传失败')
-            } finally {
-                uni.hideLoading()
-            }
-        }
-    })
-}
-
-// 删除图片
-const handleDeleteImage = (index: number) => {
-    formData.value.images.splice(index, 1)
 }
 
 // 切换紧急发布
@@ -402,11 +356,8 @@ const validateForm = (): boolean => {
         uni.$u.toast('请输入联系人')
         return false
     }
-    if (!formData.value.contact_phone.trim()) {
-        uni.$u.toast('请输入联系电话')
-        return false
-    }
-    if (!/^1[3-9]\d{9}$/.test(formData.value.contact_phone)) {
+    // 手机号可选，如果有则验证格式
+    if (formData.value.contact_phone?.trim() && !/^1[3-9]\d{9}$/.test(formData.value.contact_phone)) {
         uni.$u.toast('请输入正确的手机号')
         return false
     }
@@ -594,6 +545,11 @@ onMounted(() => {
             color: #fff;
         }
     }
+
+    &.disabled {
+        opacity: 0.5;
+        pointer-events: none;
+    }
 }
 
 // 需求金额
@@ -672,88 +628,6 @@ onMounted(() => {
         font-size: 27rpx;
         color: #9CA6A6;
     }
-}
-
-.upload-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 18rpx;
-}
-
-.upload-item {
-    width: 145rpx;
-    height: 145rpx;
-    position: relative;
-
-    .upload-img {
-        width: 100%;
-        height: 100%;
-        border-radius: 15rpx;
-    }
-
-    .upload-delete {
-        position: absolute;
-        top: -10rpx;
-        right: -10rpx;
-        width: 36rpx;
-        height: 36rpx;
-        background: rgba(0, 0, 0, 0.5);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        .delete-icon {
-            color: #fff;
-            font-size: 24rpx;
-            line-height: 1;
-        }
-    }
-}
-
-.upload-box {
-    width: 145rpx;
-    height: 145rpx;
-    background: #F3FAFA;
-    border-radius: 15rpx;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
-
-.upload-icon {
-    position: relative;
-    width: 49rpx;
-    height: 40rpx;
-
-    .upload-icon-add {
-        width: 100%;
-        height: 5rpx;
-        background: #00B6B4;
-        border-radius: 3rpx;
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-    }
-
-    .upload-icon-circle {
-        width: 18rpx;
-        height: 18rpx;
-        border: 5rpx solid #00B6B4;
-        border-radius: 50%;
-        position: absolute;
-        bottom: 0;
-        right: 50%;
-        transform: translateX(50%);
-    }
-}
-
-.upload-text {
-    font-size: 25rpx;
-    font-weight: 500;
-    color: #616B6B;
-    margin-top: 11rpx;
 }
 
 // 开关选项

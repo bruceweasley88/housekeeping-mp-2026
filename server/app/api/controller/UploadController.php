@@ -26,6 +26,7 @@ use think\response\Json;
  */
 class UploadController extends BaseApiController
 {
+    public array $notNeedLogin = ['image'];
 
     /**
      * @notes 上传图片

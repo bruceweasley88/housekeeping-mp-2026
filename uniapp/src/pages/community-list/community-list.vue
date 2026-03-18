@@ -92,7 +92,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { getCommunityLists, searchCommunity } from '@/api/community'
+import { getCommunityLists, searchCommunity, getUserAddress } from '@/api/community'
 
 // 省市区数据
 const province = ref('')
@@ -125,6 +125,9 @@ const loading = ref(false)
 
 // 当前选中索引
 const selectedIndex = ref(-1)
+
+// 用户当前小区ID
+const currentCommunityId = ref(0)
 
 // 获取小区列表
 const fetchList = async () => {
@@ -206,9 +209,31 @@ const handleAddCommunity = () => {
     })
 }
 
-// 页面加载时自动显示省市区选择器
-onMounted(() => {
-    showRegionPicker.value = true
+// 页面加载时检查用户是否已有小区
+onMounted(async () => {
+    try {
+        const res = await getUserAddress()
+        if (res && res.community_id) {
+            // 用户已有小区，自动定位
+            province.value = res.province || ''
+            city.value = res.city || ''
+            district.value = res.district || ''
+            currentCommunityId.value = res.community_id
+            // 加载列表
+            await fetchList()
+            // 在列表中找到并选中当前小区
+            const index = communityList.value.findIndex(item => item.id === currentCommunityId.value)
+            if (index >= 0) {
+                selectedIndex.value = index
+            }
+        } else {
+            // 用户没有小区，显示选择器
+            showRegionPicker.value = true
+        }
+    } catch (e) {
+        // 获取失败（未登录等），显示选择器
+        showRegionPicker.value = true
+    }
 })
 </script>
 
