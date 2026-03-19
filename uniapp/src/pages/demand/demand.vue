@@ -8,6 +8,20 @@
 
         <!-- 内容区域 -->
         <template v-else-if="demandData">
+            <!-- 流程说明卡片 - 仅陌生人承接时显示 -->
+            <view v-if="showFlowCard" class="flow-card">
+                <image class="flow-icon" src="/static/images/img_taskwz.png" mode="aspectFit" />
+                <view class="flow-steps">
+                    <text class="flow-text">需求发布</text>
+                    <text class="flow-arrow">›</text>
+                    <text class="flow-text">承接需求</text>
+                    <text class="flow-arrow">›</text>
+                    <text class="flow-text">完成需求</text>
+                    <text class="flow-arrow">›</text>
+                    <text class="flow-text">平台结算</text>
+                </view>
+            </view>
+
             <!-- 状态卡片 -->
             <view v-if="showStatusCard" class="status-card">
                 <view class="status-icon">
@@ -115,8 +129,16 @@
         <!-- 底部操作栏 -->
         <view v-if="hasBottomBar" class="bottom-bar">
             <template v-for="(btn, idx) in bottomButtons" :key="idx">
+                <!-- 分享按钮使用 button open-type -->
+                <button
+                    v-if="btn.action === 'share'"
+                    class="primary-btn share-btn"
+                    open-type="share"
+                >
+                    <text class="primary-text">{{ btn.text }}</text>
+                </button>
                 <view
-                    v-if="btn.type === 'secondary'"
+                    v-else-if="btn.type === 'secondary'"
                     class="secondary-btn"
                     @click="handleButtonClick(btn.action)"
                 >
@@ -186,7 +208,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { onLoad, onShow } from '@dcloudio/uni-app'
+import { onLoad, onShow, onShareAppMessage } from '@dcloudio/uni-app'
 import {
     getDemandDetail,
     acceptDemand,
@@ -226,6 +248,11 @@ const showStatusCard = computed(() => {
     if (role === 'owner') return true
     if (role === 'accepter') return [2, 3, 6].includes(status)
     return false
+})
+
+// 流程卡片显示条件：陌生人查看待承接需求
+const showFlowCard = computed(() => {
+    return userRole.value === 'stranger' && demandStatus.value === 1
 })
 
 const statusCardInfo = computed(() => {
@@ -386,6 +413,16 @@ const confirmModalContent = computed(() => {
 })
 
 // ============ 生命周期 ============
+// 微信小程序分享给好友
+onShareAppMessage(() => {
+    const data = demandData.value
+    return {
+        title: data?.title || '邻居需求',
+        path: `/pages/demand/demand?id=${demandId.value}`,
+        imageUrl: data?.images?.[0] || ''
+    }
+})
+
 onLoad((options: any) => {
     if (options.id) {
         demandId.value = parseInt(options.id)
@@ -569,6 +606,41 @@ const handleConfirmAction = async () => {
     font-size: 28rpx;
     color: #999;
     margin-top: 20rpx;
+}
+
+// 流程说明卡片
+.flow-card {
+    background: #fff;
+    border-radius: 24rpx;
+    margin: 29rpx 29rpx 22rpx;
+    padding: 22rpx 29rpx;
+    display: flex;
+    align-items: center;
+}
+
+.flow-icon {
+    width: 50rpx;
+    height: 52rpx;
+    flex-shrink: 0;
+    margin-right: 20rpx;
+}
+
+.flow-steps {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.flow-text {
+    font-size: 26rpx;
+    color: #222929;
+}
+
+.flow-arrow {
+    font-size: 44rpx;
+    color: #DADADA;
+    margin: 0 12rpx;
 }
 
 // 状态卡片
@@ -892,6 +964,19 @@ const handleConfirmAction = async () => {
     font-size: 33rpx;
     font-weight: 500;
     color: #fff;
+}
+
+// 分享按钮 - 移除 button 默认样式
+.share-btn {
+    padding: 0;
+    margin: 0;
+    border: none;
+    background: #00B6B4;
+    line-height: normal;
+
+    &::after {
+        border: none;
+    }
 }
 
 .disabled-btn {

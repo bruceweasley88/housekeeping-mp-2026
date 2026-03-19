@@ -1,19 +1,22 @@
 <template>
-    <page-meta :page-style="$theme.pageStyle">
-        <!-- #ifndef H5 -->
-        <navigation-bar
-            :front-color="$theme.navColor"
-            :background-color="$theme.navBgColor"
-        />
-        <!-- #endif -->
-    </page-meta>
     <view class="upload-bankcard">
+        <!-- 状态提示 -->
+        <view v-if="status !== null" class="status-banner" :class="statusClass">
+            <text class="status-text">{{ statusText }}</text>
+            <text v-if="status === 2 && rejectReason" class="reject-reason">{{ rejectReason }}</text>
+        </view>
+
         <!-- 您的姓名 表单项 -->
         <view class="form-section">
             <text class="form-label">您的姓名</text>
             <view class="form-item flex justify-between items-center">
-                <text class="form-placeholder">真实姓名</text>
-                <text class="form-value">{{ userName }}</text>
+                <input
+                    class="form-input"
+                    v-model="realName"
+                    placeholder="请输入真实姓名"
+                    :disabled="isDisabled"
+                    placeholder-class="form-placeholder"
+                />
             </view>
         </view>
 
@@ -21,14 +24,14 @@
         <text class="section-title">上传卡照片</text>
 
         <!-- 银行卡图片区域 -->
-        <view class="bankcard-wrapper">
+        <view class="bankcard-wrapper" @click="handleCapture">
             <image
                 class="bankcard-image"
-                src="/packages/static/images/img_bankcard.png"
+                :src="bankcardPreview"
                 mode="widthFix"
             />
             <!-- 拍摄按钮（覆盖在图片底部） -->
-            <view class="capture-btn" @click="handleCapture">
+            <view v-if="!isDisabled" class="capture-btn">
                 <text class="capture-btn-text">拍摄银行卡正面</text>
             </view>
         </view>
@@ -39,31 +42,158 @@
         </text>
 
         <!-- 确认上传按钮 -->
-        <view class="submit-btn" @click="handleSubmit">
-            <text class="submit-btn-text">确认上传</text>
+        <view
+            class="submit-btn"
+            :class="{ 'submit-btn-disabled': isDisabled }"
+            @click="handleSubmit"
+        >
+            <text class="submit-btn-text">{{ btnText }}</text>
         </view>
+
+        <!-- 审批中提示 -->
+        <text v-if="status === 0" class="pending-tip">您的申请正在审核中，请耐心等待</text>
     </view>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { onLoad } from '@dcloudio/uni-app'
+import { submitUserBankcard, getUserBankcardDetail } from '@/api/userBankcard'
+import { uploadImage } from '@/api/app'
 
-const userName = ref('薛凯琪') // TODO: 从用户信息获取
+// 状态: null=未提交, 0=待审核, 1=已通过, 2=已拒绝
+const status = ref<number | null>(null)
+const loading = ref(true)
 
+// 表单数据
+const realName = ref('')
+const bankcardImage = ref('')
+const rejectReason = ref('')
+
+// 预览图片
+const bankcardPreview = computed(() => {
+    return bankcardImage.value || '/packages/static/images/img_bankcard.png'
+})
+
+// 状态文字
+const statusText = computed(() => {
+    if (status.value === 0) return '审批中'
+    if (status.value === 1) return '已通过'
+    if (status.value === 2) return '已拒绝'
+    return ''
+})
+
+// 状态样式类
+const statusClass = computed(() => {
+    if (status.value === 0) return 'status-pending'
+    if (status.value === 1) return 'status-pass'
+    if (status.value === 2) return 'status-reject'
+    return ''
+})
+
+// 按钮文字
+const btnText = computed(() => {
+    if (status.value === 0) return '审批中'
+    if (status.value === 1) return '已认证'
+    if (status.value === 2) return '重新提交'
+    return '确认上传'
+})
+
+// 是否禁用操作
+const isDisabled = computed(() => {
+    return status.value === 0 || status.value === 1
+})
+
+// 获取银行卡详情
+const fetchDetail = async () => {
+    loading.value = true
+    try {
+        const res = await getUserBankcardDetail()
+        if (res && res.id) {
+            status.value = res.status
+            rejectReason.value = res.reject_reason || ''
+            // 已拒绝时清空表单，允许重新填写
+            if (res.status === 2) {
+                realName.value = ''
+                bankcardImage.value = ''
+            } else {
+                // 待审核或已通过时，回显数据
+                realName.value = res.real_name || ''
+                bankcardImage.value = res.bankcard_image || ''
+            }
+        } else {
+            status.value = null
+            realName.value = ''
+            bankcardImage.value = ''
+            rejectReason.value = ''
+        }
+    } catch (error) {
+        console.error('获取银行卡详情失败:', error)
+    } finally {
+        loading.value = false
+    }
+}
+
+// 上传图片
+const uploadImageFile = async (filePath: string): Promise<string> => {
+    uni.showLoading({ title: '上传中...' })
+    try {
+        const res = await uploadImage(filePath)
+        uni.hideLoading()
+        return res.uri
+    } catch (error) {
+        uni.hideLoading()
+        uni.$u.toast('上传失败')
+        throw error
+    }
+}
+
+// 拍摄银行卡
 const handleCapture = () => {
+    if (isDisabled.value) return
     uni.chooseImage({
         count: 1,
-        sourceType: ['camera'],
-        success: (res) => {
-            console.log('选择的图片:', res.tempFilePaths)
+        sourceType: ['camera', 'album'],
+        success: async (res) => {
+            const uri = await uploadImageFile(res.tempFilePaths[0])
+            bankcardImage.value = uri
         }
     })
 }
 
-const handleSubmit = () => {
-    // TODO: 实现上传逻辑
-    console.log('确认上传')
+// 提交银行卡
+const handleSubmit = async () => {
+    if (isDisabled.value) return
+
+    // 表单验证
+    if (!realName.value.trim()) {
+        uni.$u.toast('请填写真实姓名')
+        return
+    }
+    if (!bankcardImage.value) {
+        uni.$u.toast('请上传银行卡照片')
+        return
+    }
+
+    uni.showLoading({ title: '提交中...' })
+    try {
+        await submitUserBankcard({
+            real_name: realName.value.trim(),
+            bankcard_image: bankcardImage.value
+        })
+        uni.hideLoading()
+        uni.$u.toast('提交成功')
+        // 更新状态为待审核
+        status.value = 0
+    } catch (error: any) {
+        uni.hideLoading()
+        uni.$u.toast(error.msg || '提交失败')
+    }
 }
+
+onLoad(() => {
+    fetchDetail()
+})
 </script>
 
 <style lang="scss" scoped>
@@ -71,6 +201,52 @@ const handleSubmit = () => {
     min-height: 100vh;
     background-color: #f6f6f6;
     padding: 0 30rpx;
+    padding-bottom: 60rpx;
+}
+
+.status-banner {
+    margin: 20rpx 0;
+    padding: 20rpx 30rpx;
+    border-radius: 15rpx;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.status-pending {
+    background-color: #fff3e0;
+}
+
+.status-pass {
+    background-color: #e8f5e9;
+}
+
+.status-reject {
+    background-color: #ffebee;
+}
+
+.status-text {
+    font-size: 28rpx;
+    font-weight: 500;
+}
+
+.status-pending .status-text {
+    color: #ff7e22;
+}
+
+.status-pass .status-text {
+    color: #00a2a0;
+}
+
+.status-reject .status-text {
+    color: #f04530;
+}
+
+.reject-reason {
+    font-size: 24rpx;
+    color: #f04530;
+    margin-top: 10rpx;
 }
 
 .form-section {
@@ -80,6 +256,7 @@ const handleSubmit = () => {
 .form-label {
     display: block;
     font-size: 29rpx;
+    font-weight: 500;
     color: #222222;
     margin-bottom: 22rpx;
 }
@@ -91,21 +268,23 @@ const handleSubmit = () => {
     padding: 0 29rpx;
 }
 
-.form-placeholder {
-    font-size: 33rpx;
-    color: #666666;
-}
-
-.form-value {
+.form-input {
+    flex: 1;
     font-size: 33rpx;
     color: #222222;
+}
+
+.form-placeholder {
+    font-size: 33rpx;
+    color: #999999;
 }
 
 .section-title {
     display: block;
     font-size: 29rpx;
+    font-weight: 500;
     color: #222222;
-    margin-top: 36rpx;
+    margin-top: 40rpx;
     margin-bottom: 22rpx;
 }
 
@@ -150,7 +329,7 @@ const handleSubmit = () => {
 }
 
 .submit-btn {
-    margin-top: 266rpx;
+    margin-top: 60rpx;
     background-color: #00b6b4;
     border-radius: 51rpx;
     height: 102rpx;
@@ -159,8 +338,21 @@ const handleSubmit = () => {
     justify-content: center;
 }
 
+.submit-btn-disabled {
+    background-color: #dadada;
+}
+
 .submit-btn-text {
     font-size: 36rpx;
+    font-weight: 500;
     color: #ffffff;
+}
+
+.pending-tip {
+    display: block;
+    text-align: center;
+    font-size: 24rpx;
+    color: #ff7e22;
+    margin-top: 20rpx;
 }
 </style>

@@ -100,4 +100,14 @@
 			transform: rotate(360deg);
 		}
 	}
+
+	@keyframes u-circle {
+		0% {
+			transform: rotate(0);
+		}
+
+		100% {
+			transform: rotate(360deg);
+		}
+	}
 </style>

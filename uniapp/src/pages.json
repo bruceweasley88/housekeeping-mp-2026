@@ -202,6 +202,9 @@
             "path": "pages/mutual-aid-list/mutual-aid-list",
             "style": {
                 "navigationBarTitleText": "互助"
+            },
+            "meta": {
+                "auth": true
             }
         },
         {

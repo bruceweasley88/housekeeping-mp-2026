@@ -20,11 +20,11 @@
                     <view class="flow-label-placeholder"></view>
                     <view class="flow-steps">
                         <text class="step">发布需求</text>
-                        <text class="step-arrow">></text>
+                        <text class="step-arrow">›</text>
                         <text class="step">承接需求</text>
-                        <text class="step-arrow">></text>
+                        <text class="step-arrow">›</text>
                         <text class="step">完成需求</text>
-                        <text class="step-arrow">></text>
+                        <text class="step-arrow">›</text>
                         <text class="step">平台结算</text>
                     </view>
                 </view>
@@ -88,6 +88,9 @@
         <!-- 登录弹窗 -->
         <login-popup v-model:show="showLogin" @confirm="handleLoginConfirm" @cancel="handleLoginCancel" />
 
+        <!-- 测试登录按钮（仅开发调试） -->
+        <view class="test-login-btn" @click="handleTestLogin">测试登录</view>
+
         <tabbar />
     </view>
 </template>
@@ -96,6 +99,7 @@
 import { getIndex } from '@/api/shop'
 import { getUserAddress } from '@/api/community'
 import { getDemandCategoryLists, getDemandLists } from '@/api/demand'
+import { login } from '@/api/account'
 import { onLoad, onShow, onReady } from "@dcloudio/uni-app";
 import { computed, reactive, ref, watch, onMounted, onUnmounted } from 'vue'
 import LSwiper from '@/components/l-swiper/l-swiper.vue'
@@ -270,8 +274,8 @@ watch(
 )
 
 const handlePublish = () => {
-    // 未选择小区时提示
-    if (!communityId.value) {
+    // 已登录但未选择小区时提示
+    if (userStore.isLogin && !communityId.value) {
         uni.showToast({
             title: '请选择小区',
             icon: 'none'
@@ -293,6 +297,28 @@ const handleLoginConfirm = (data: { avatar: string; nickname: string }) => {
 
 const handleLoginCancel = () => {
     console.log('暂不登录')
+}
+
+// 测试账号登录（仅开发调试用）
+const handleTestLogin = async () => {
+    try {
+        const data = await login({
+            account: 'wx6688',
+            password: 'wx123456',
+            scene: 1
+        })
+        userStore.login(data.token)
+        await loadPageData()
+        uni.showToast({
+            title: '测试账号登录成功',
+            icon: 'none'
+        })
+    } catch (error: any) {
+        uni.showToast({
+            title: error || '登录失败',
+            icon: 'none'
+        })
+    }
 }
 
 const handleTakeTask = (item: any) => {
@@ -406,9 +432,10 @@ const handleTakeTask = (item: any) => {
     }
 
     .step-arrow {
-        font-size: 22rpx;
+        font-size: 44rpx;
         color: #DADADA;
         margin: 0 4rpx;
+        transform: translateY(-2rpx);
     }
 
     .publish-btn {
@@ -482,5 +509,18 @@ const handleTakeTask = (item: any) => {
             color: #00A2A0;
         }
     }
+}
+
+// 测试登录按钮
+.test-login-btn {
+    position: fixed;
+    right: 20rpx;
+    bottom: calc(200rpx + env(safe-area-inset-bottom));
+    background: #FF7E22;
+    color: #fff;
+    font-size: 24rpx;
+    padding: 16rpx 24rpx;
+    border-radius: 30rpx;
+    z-index: 999;
 }
 </style>
