@@ -30,7 +30,7 @@
                     <view class="income-section">
                         <text class="label">我的收入（元）</text>
                         <view class="amount-row">
-                            <text class="amount">445.00</text>
+                            <text class="amount">{{ billIncome }}</text>
                             <view class="withdraw-btn" @click="goToWallet">
                                 <text class="withdraw-text">去提现</text>
                                 <image class="arrow-white" src="./assets/img/icon_arrow_white.png" mode="aspectFit" />
@@ -39,7 +39,7 @@
                     </view>
                     <view class="expense-section">
                         <text class="label">我的支出（元）</text>
-                        <text class="amount">0.00</text>
+                        <text class="amount">{{ billExpense }}</text>
                     </view>
                 </view>
             </view>
@@ -87,12 +87,17 @@ import { useUserStore } from '@/stores/user'
 import { onShow } from '@dcloudio/uni-app'
 import { storeToRefs } from 'pinia'
 import { getUserVerifyDetail } from '@/api/userVerify'
+import { getBillLists } from '@/api/bill'
 
 const userStore = useUserStore()
 const { userInfo } = storeToRefs(userStore)
 
 // 认证状态: null=未提交, 0=待审核, 1=已通过, 2=已拒绝
 const verifyStatus = ref<number | null>(null)
+
+// 账单收入支出
+const billIncome = ref('0.00')
+const billExpense = ref('0.00')
 
 onShow(async () => {
     userStore.getUser()
@@ -102,6 +107,15 @@ onShow(async () => {
         verifyStatus.value = res?.status ?? null
     } catch (e) {
         verifyStatus.value = null
+    }
+    // 获取账单汇总
+    try {
+        const billRes = await getBillLists()
+        billIncome.value = billRes?.income || '0.00'
+        billExpense.value = billRes?.expense || '0.00'
+    } catch (e) {
+        billIncome.value = '0.00'
+        billExpense.value = '0.00'
     }
 })
 
@@ -115,7 +129,7 @@ const goToBill = () => {
 // 跳转钱包/提现
 const goToWallet = () => {
     uni.navigateTo({
-        url: '/packages/pages/user_wallet/user_wallet'
+        url: '/packages/pages/my-bill/my-bill'
     })
 }
 

@@ -1,12 +1,4 @@
 <template>
-    <page-meta :page-style="$theme.pageStyle">
-        <!-- #ifndef H5 -->
-        <navigation-bar
-            :front-color="$theme.navColor"
-            :background-color="$theme.navBgColor"
-        />
-        <!-- #endif -->
-    </page-meta>
     <view class="my-bill">
 
         <!-- 账单信息卡片 -->
@@ -77,10 +69,12 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
+import { getBillLists } from '@/api/bill'
 
 // 收入支出金额
-const income = ref('445.00')
+const income = ref('0.00')
 const expense = ref('0.00')
 
 // Tab 配置
@@ -90,46 +84,30 @@ const tabList = ref([
 ])
 const current = ref(0)
 
-// 账单列表数据（静态展示）
-const billList = ref([
-    {
-        id: 1,
-        title: '小三数学家教2小时',
-        time: '2026.01.01 23:00',
-        amount: '280.00',
-        type: 1,
-        status: 1
-    },
-    {
-        id: 2,
-        title: '整理衣柜需求',
-        time: '2026.01.01 23:00',
-        amount: '130.00',
-        type: 1,
-        status: 0
-    },
-    {
-        id: 3,
-        title: '小三数学家教2小时',
-        time: '2026.01.01 23:00',
-        amount: '280.00',
-        type: 1,
-        status: 1
-    },
-    {
-        id: 4,
-        title: '整理衣柜需求',
-        time: '2026.01.01 23:00',
-        amount: '130.00',
-        type: 1,
-        status: 0
+// 原始账单列表
+const allBillList = ref<any[]>([])
+
+// 根据Tab筛选后的账单列表
+const billList = computed(() => {
+    const type = current.value === 0 ? 1 : 2  // 0=收入详情(type=1), 1=支出详情(type=2)
+    return allBillList.value.filter(item => item.type === type)
+})
+
+// 加载账单数据
+const loadBillData = async () => {
+    try {
+        const res = await getBillLists()
+        income.value = res.income || '0.00'
+        expense.value = res.expense || '0.00'
+        allBillList.value = res.list || []
+    } catch (e) {
+        console.error('获取账单数据失败', e)
     }
-])
+}
 
 // 切换 Tab
 const changeTab = (index: number) => {
     current.value = index
-    // TODO: 根据 tab 切换加载不同数据
 }
 
 // 立即提现
@@ -139,6 +117,11 @@ const handleWithdraw = () => {
         icon: 'none'
     })
 }
+
+// 页面显示时加载数据
+onShow(() => {
+    loadBillData()
+})
 </script>
 
 <style lang="scss" scoped>

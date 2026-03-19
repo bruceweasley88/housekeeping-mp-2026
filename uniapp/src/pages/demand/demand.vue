@@ -194,6 +194,43 @@
             </view>
         </u-popup>
 
+        <!-- 结算弹窗 -->
+        <u-popup v-model="showSettlePopup" mode="bottom" border-radius="29" :mask-close-able="false">
+            <view class="settle-popup">
+                <view class="popup-header">
+                    <text class="popup-title">确认结算</text>
+                    <view class="close-btn" @click="showSettlePopup = false">
+                        <text class="close-icon">×</text>
+                    </view>
+                </view>
+                <view class="popup-content">
+                    <view class="settle-row">
+                        <text class="settle-label">需求金额</text>
+                        <text class="settle-value">¥{{ demandData?.amount || 0 }}</text>
+                    </view>
+                    <view class="settle-row">
+                        <text class="settle-label">服务费（{{ demandData?.service_rate || 0 }}%）</text>
+                        <text class="settle-value text-red">-¥{{ settleServiceFee }}</text>
+                    </view>
+                    <view class="settle-row settle-total">
+                        <text class="settle-label">实际结算金额</text>
+                        <text class="settle-value text-green">¥{{ settleAmount }}</text>
+                    </view>
+                    <view class="settle-tip">
+                        <text class="tip-text">结算后金额将打入承接者账户（待入账状态）</text>
+                    </view>
+                </view>
+                <view class="popup-buttons">
+                    <view class="btn-cancel" @click="showSettlePopup = false">
+                        <text class="btn-cancel-text">取消</text>
+                    </view>
+                    <view class="btn-confirm" @click="handleConfirmSettle">
+                        <text class="btn-confirm-text">确认结算</text>
+                    </view>
+                </view>
+            </view>
+        </u-popup>
+
         <!-- 确认弹窗 -->
         <u-modal
             v-model="showConfirmModal"
@@ -216,6 +253,7 @@ import {
     finishDemand,
     adjustDemandAmount
 } from '@/api/demand'
+import { settleDemand } from '@/api/bill'
 
 const defaultAvatar = '/static/images/publish/icon_successb.png'
 
@@ -230,6 +268,7 @@ const showAdjustPopup = ref(false)
 const adjustAmount = ref('')
 const showConfirmModal = ref(false)
 const confirmActionType = ref<'accept' | 'cancelAccept' | 'finish' | null>(null)
+const showSettlePopup = ref(false)
 
 // ============ 计算属性：角色与状态 ============
 const userRole = computed(() => {
@@ -374,6 +413,21 @@ const priceDisplay = computed(() => {
             extra: ''
         }
     }
+})
+
+// ============ 计算属性：结算金额 ============
+const settleServiceFee = computed(() => {
+    const data = demandData.value
+    if (!data) return '0.00'
+    const fee = (data.amount || 0) * (data.service_rate || 0) / 100
+    return fee.toFixed(2)
+})
+
+const settleAmount = computed(() => {
+    const data = demandData.value
+    if (!data) return '0.00'
+    const amount = (data.amount || 0) - parseFloat(settleServiceFee.value)
+    return amount.toFixed(2)
 })
 
 // ============ 计算属性：手机号显示 ============
@@ -550,7 +604,23 @@ const handleConfirmAdjust = async () => {
 }
 
 const handleSettle = () => {
-    uni.$u.toast('功能开发中')
+    showSettlePopup.value = true
+}
+
+// 确认结算
+const handleConfirmSettle = async () => {
+    if (submitting.value) return
+    submitting.value = true
+    try {
+        await settleDemand(demandId.value)
+        uni.$u.toast('结算成功')
+        showSettlePopup.value = false
+        loadDetail()
+    } catch (e) {
+        console.error('结算失败', e)
+    } finally {
+        submitting.value = false
+    }
 }
 
 const handleContact = () => {
@@ -1107,5 +1177,61 @@ const handleConfirmAction = async () => {
     font-size: 29rpx;
     font-weight: bold;
     color: #fff;
+}
+
+// 结算弹窗
+.settle-popup {
+    padding: 0 36rpx calc(36rpx + env(safe-area-inset-bottom));
+}
+
+.settle-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 22rpx 0;
+    border-bottom: 1rpx solid #F6F6F6;
+}
+
+.settle-label {
+    font-size: 29rpx;
+    color: #616B6B;
+}
+
+.settle-value {
+    font-size: 29rpx;
+    color: #222929;
+    font-weight: 500;
+}
+
+.settle-total {
+    border-bottom: none;
+    padding-top: 29rpx;
+
+    .settle-label {
+        font-size: 33rpx;
+        color: #222929;
+        font-weight: 500;
+    }
+
+    .settle-value {
+        font-size: 44rpx;
+    }
+}
+
+.text-red {
+    color: #F04530;
+}
+
+.text-green {
+    color: #00A2A0;
+}
+
+.settle-tip {
+    padding: 22rpx 0;
+
+    .tip-text {
+        font-size: 25rpx;
+        color: #9CA6A6;
+    }
 }
 </style>
