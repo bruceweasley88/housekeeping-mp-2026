@@ -8,6 +8,7 @@ use app\common\logic\BaseLogic;
 use app\common\model\Bill;
 use app\common\model\Demand;
 use think\facade\Db;
+use app\api\logic\NoticeLogic;
 
 /**
  * 账单逻辑层
@@ -73,6 +74,15 @@ class BillLogic extends BaseLogic
             $demand->save([
                 'status' => DemandEnum::STATUS_SETTLED,
             ]);
+
+            // 发送系统公告：通知承接者
+            NoticeLogic::addNotice(
+                $demand->accept_user_id,
+                '需求已结算到账',
+                '您承接的需求已完成结算，金额 ¥' . number_format($settleAmount, 2) . ' 已入账，可在我的账单查看详情。',
+                'demand',
+                $demand->id
+            );
 
             Db::commit();
             return true;

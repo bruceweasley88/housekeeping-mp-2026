@@ -197,3 +197,10 @@ export function series(...task: Array<(_arg: any) => any>) {
         })
     }
 }
+
+/**
+ * @description 跳转客服（目前显示开发中提示）
+ */
+export function goToCustomerService() {
+    uni.$u.toast('正在开发中')
+}

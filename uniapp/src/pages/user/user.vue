@@ -69,7 +69,7 @@
                     <text class="setting-text">关于我们</text>
                     <image class="arrow-icon" src="./assets/img/icon_arrow_right.png" mode="aspectFit" />
                 </view>
-                <view class="setting-item" @click="goToCustomerService">
+                <view class="setting-item" @click="handleCustomerService">
                     <image class="setting-icon" src="./assets/img/icon_service.png" mode="aspectFit" />
                     <text class="setting-text">联系客服</text>
                     <image class="arrow-icon" src="./assets/img/icon_arrow_right.png" mode="aspectFit" />
@@ -88,6 +88,7 @@ import { onShow } from '@dcloudio/uni-app'
 import { storeToRefs } from 'pinia'
 import { getUserVerifyDetail } from '@/api/userVerify'
 import { getBillLists } from '@/api/bill'
+import { goToCustomerService } from '@/utils/util'
 
 const userStore = useUserStore()
 const { userInfo } = storeToRefs(userStore)
@@ -162,10 +163,8 @@ const goToAboutUs = () => {
 }
 
 // 跳转联系客服
-const goToCustomerService = () => {
-    uni.navigateTo({
-        url: '/pages/customer_service/customer_service'
-    })
+const handleCustomerService = () => {
+    goToCustomerService()
 }
 </script>
 

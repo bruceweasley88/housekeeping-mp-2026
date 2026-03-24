@@ -9,6 +9,7 @@ use app\common\logic\BaseLogic;
 use app\common\model\Demand;
 use app\common\model\DemandAccept;
 use think\facade\Db;
+use app\api\logic\NoticeLogic;
 
 /**
  * 需求逻辑层
@@ -351,6 +352,15 @@ class DemandLogic extends BaseLogic
                 'status' => DemandAccept::STATUS_ACCEPTING,
             ]);
 
+            // 发送系统公告：通知发布者
+            NoticeLogic::addNotice(
+                $demand->user_id,
+                '您的需求已被承接',
+                '您的需求已被承接，可在需求详情查看承接人信息，立即进行线上沟通，与他约定具体的需求内容。',
+                'demand',
+                $demand->id
+            );
+
             Db::commit();
             return true;
         } catch (\Exception $e) {
@@ -400,6 +410,15 @@ class DemandLogic extends BaseLogic
                 'update_time' => time()
             ]);
 
+            // 发送系统公告：通知发布者
+            NoticeLogic::addNotice(
+                $demand->user_id,
+                '您的需求承接已取消',
+                '您的需求承接已取消，可重新等待他人承接或查看其他需求。',
+                'demand',
+                $demand->id
+            );
+
             Db::commit();
             return true;
         } catch (\Exception $e) {
@@ -443,6 +462,15 @@ class DemandLogic extends BaseLogic
                 'status' => DemandAccept::STATUS_COMPLETED,
                 'update_time' => time()
             ]);
+
+            // 发送系统公告：通知承接者
+            NoticeLogic::addNotice(
+                $demand->accept_user_id,
+                '需求已确认完成',
+                '您承接的需求已确认完成，可在需求详情查看完成信息，等待发布者结算。',
+                'demand',
+                $demand->id
+            );
 
             return true;
         } catch (\Exception $e) {
