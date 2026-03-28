@@ -1,74 +1,64 @@
 <?php
 
-namespace app\adminapi\lists\community;
+namespace app\adminapi\lists\poster;
 
 use app\adminapi\lists\BaseAdminDataLists;
-use app\common\enum\CommunityEnum;
 use app\common\lists\ListsSearchInterface;
 use app\common\lists\ListsSortInterface;
-use app\common\model\Community;
+use app\common\model\poster\Poster;
 
 /**
- * 小区列表
- * Class CommunityLists
- * @package app\adminapi\lists\community
+ * 海报列表
+ * Class PosterLists
+ * @package app\adminapi\lists\poster
  */
-class CommunityLists extends BaseAdminDataLists implements ListsSearchInterface, ListsSortInterface
+class PosterLists extends BaseAdminDataLists implements ListsSearchInterface, ListsSortInterface
 {
     /**
      * @notes 设置搜索条件
-     * @return array
      */
     public function setSearch(): array
     {
         return [
-            '%like%' => ['name', 'address'],
-            '=' => ['province', 'city', 'district', 'status'],
-            'between_time' => 'create_time',
+            '%like%' => ['name'],
+            '=' => ['is_show']
         ];
     }
 
     /**
      * @notes 设置支持排序字段
-     * @return array
      */
     public function setSortFields(): array
     {
-        return ['create_time' => 'create_time', 'id' => 'id'];
+        return ['sort' => 'sort', 'id' => 'id', 'create_time' => 'create_time'];
     }
 
     /**
      * @notes 设置默认排序
-     * @return array
      */
     public function setDefaultOrder(): array
     {
-        return ['id' => 'desc'];
+        return ['sort' => 'desc', 'id' => 'desc'];
     }
 
     /**
-     * @notes 获取管理列表
-     * @return array
+     * @notes 获取列表
      */
     public function lists(): array
     {
-        $list = Community::where($this->searchWhere)
-            ->append(['status_desc'])
+        return Poster::where($this->searchWhere)
             ->limit($this->limitOffset, $this->limitLength)
             ->order($this->sortOrder)
             ->select()
             ->toArray();
-
-        return $list;
     }
 
     /**
      * @notes 获取数量
-     * @return int
      */
     public function count(): int
     {
-        return Community::where($this->searchWhere)->count();
+        return Poster::where($this->searchWhere)->count();
     }
 
     public function extend()

@@ -8,7 +8,7 @@
         </view>
 
         <!-- 轮播海报 -->
-        <view class="banner-wrapper" v-if="bannerContent?.data?.length && bannerContent?.enabled">
+        <view class="banner-wrapper" v-if="bannerContent.data.length">
             <l-swiper :content="bannerContent" height="200" :circular="true" :effect3d="false" borderRadius="29"
                 interval="7000" bgColor="transparent" />
         </view>
@@ -88,15 +88,15 @@
         <!-- 登录弹窗 -->
         <login-popup v-model:show="showLogin" @confirm="handleLoginConfirm" @cancel="handleLoginCancel" />
 
-        <!-- 测试登录按钮（仅开发调试） -->
-        <view class="test-login-btn" @click="handleTestLogin">测试登录</view>
+        <!-- 测试登录按钮（仅开发者工具显示） -->
+        <view v-if="isDevTools" class="test-login-btn" @click="handleTestLogin">测试登录</view>
 
         <tabbar />
     </view>
 </template>
 
 <script setup lang="ts">
-import { getIndex } from '@/api/shop'
+import { getPosterLists } from '@/api/shop'
 import { getUserAddress } from '@/api/community'
 import { getDemandCategoryLists, getDemandLists } from '@/api/demand'
 import { login } from '@/api/account'
@@ -114,13 +114,11 @@ import LoginPopup from '@/components/login-popup/login-popup.vue'
 
 const userStore = useUserStore()
 
-const state = reactive<{
-    pages: any[]
-    meta: any[]
-}>({
-    pages: [],
-    meta: []
-})
+// 是否在开发者工具中运行（真机不显示测试按钮）
+const isDevTools = ref(false)
+
+// 海报数据
+const posterList = ref<any[]>([])
 
 // 用户地址信息
 const addressText = ref('')
@@ -186,14 +184,22 @@ const handleCategoryClick = (item: { id: number; name: string }) => {
 
 // 获取banner组件的数据
 const bannerContent = computed(() => {
-    const banner = state.pages.find((item: any) => item.name === 'banner')
-    return banner?.content || {}
+    return {
+        data: posterList.value.map(item => ({
+            image: item.image,
+            name: item.name
+        }))
+    }
 })
 
-const getData = async () => {
-    const data = await getIndex()
-    state.pages = JSON.parse(data?.page?.data || '[]')
-    state.meta = JSON.parse(data?.page?.meta || '[]')
+// 获取海报数据
+const fetchPosters = async () => {
+    try {
+        const res = await getPosterLists()
+        posterList.value = res || []
+    } catch (e) {
+        posterList.value = []
+    }
 }
 
 // 获取用户地址
@@ -222,7 +228,7 @@ const fetchUserAddress = async () => {
 const loadPageData = async () => {
     // 先并行加载不依赖地址的数据
     await Promise.all([
-        getData(),
+        fetchPosters(),
         fetchCategoryList(),
         fetchUserAddress()
     ])
@@ -231,6 +237,9 @@ const loadPageData = async () => {
 }
 
 onLoad(() => {
+    // 判断是否在开发者工具中运行
+    const systemInfo = uni.getSystemInfoSync()
+    isDevTools.value = systemInfo.platform === 'devtools'
     loadPageData()
 })
 

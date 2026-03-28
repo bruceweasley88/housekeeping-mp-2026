@@ -17,3 +17,8 @@ export function getDecorate(data: any) {
 export function getHotSearch() {
     return request.get({ url: '/search/hotLists' })
 }
+
+// 海报列表
+export function getPosterLists() {
+    return request.get({ url: '/poster/lists' })
+}

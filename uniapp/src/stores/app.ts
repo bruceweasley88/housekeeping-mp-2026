@@ -21,7 +21,24 @@ export const useAppStore = defineStore({
     },
     actions: {
         getImageUrl(url: string) {
-            return url.indexOf('http') ? `${this.config.domain}${url}` : url
+            // 如果已经是完整URL，直接返回
+            if (url.indexOf('http') === 0) {
+                return url
+            }
+
+            // 获取域名并处理末尾斜杠
+            let domain = this.config.domain || ''
+            if (domain.endsWith('/')) {
+                domain = domain.slice(0, -1)
+            }
+
+            // 处理URL开头的斜杠
+            let path = url || ''
+            if (path.startsWith('/')) {
+                path = path.slice(1)
+            }
+
+            return `${domain}/${path}`
         },
         async getConfig() {
             const data = await getConfig()
