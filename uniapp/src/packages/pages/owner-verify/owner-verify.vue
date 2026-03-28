@@ -57,8 +57,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { onShow } from '@dcloudio/uni-app'
+import { ref, computed } from 'vue'
+import { onLoad } from '@dcloudio/uni-app'
 import { submitUserVerify, getUserVerifyDetail } from '@/api/userVerify'
 import { uploadImage } from '@/api/app'
 import ImageUpload from '@/components/image-upload/image-upload.vue'
@@ -229,7 +229,7 @@ const handleSubmit = async () => {
     }
 }
 
-onShow(() => {
+onLoad(() => {
     fetchDetail()
 })
 </script>

@@ -33,7 +33,7 @@ class UserVerifyLogic extends BaseLogic
                 $verify->reject_reason = $params['reject_reason'] ?? '';
             }
             if ($params['status'] == UserVerifyEnum::STATUS_VERIFIED) {
-                $verify->verified_at = time();
+                $verify->verified_at = date('Y-m-d H:i:s');
             }
             $verify->save();
 
