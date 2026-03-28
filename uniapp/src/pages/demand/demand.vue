@@ -217,7 +217,7 @@ import {
     adjustDemandAmount
 } from '@/api/demand'
 import { settleDemand } from '@/api/bill'
-import { createChatSession } from '@/api/chat'
+import { chat } from '@/utils/util'
 
 const defaultAvatar = '/static/images/publish/icon_successb.png'
 
@@ -565,7 +565,7 @@ const handleSettle = async () => {
     }
 }
 
-const handleContact = async () => {
+const handleContact = () => {
     // 确定对方用户ID
     const peerUserId = userRole.value === 'owner'
         ? demandData.value?.accept_info?.id
@@ -575,30 +575,7 @@ const handleContact = async () => {
         uni.$u.toast('无法获取用户信息')
         return
     }
-
-    uni.showLoading({ title: '加载中', mask: true })
-    try {
-        const res = await createChatSession(peerUserId)
-        uni.hideLoading()
-        if (res?.session_id) {
-            const peerUser = {
-                id: peerUserId,
-                nickname: userRole.value === 'owner'
-                    ? demandData.value?.accept_info?.nickname
-                    : demandData.value?.user_info?.nickname,
-                avatar: userRole.value === 'owner'
-                    ? demandData.value?.accept_info?.avatar
-                    : demandData.value?.user_info?.avatar
-            }
-            uni.navigateTo({
-                url: `/pages/chat/chat?session_id=${res.session_id}&peer_user=${encodeURIComponent(JSON.stringify(peerUser))}`
-            })
-        }
-    } catch (e) {
-        uni.hideLoading()
-        console.error('创建会话失败', e)
-        uni.$u.toast('创建会话失败')
-    }
+    chat(peerUserId)
 }
 
 const handleConfirmAction = async () => {

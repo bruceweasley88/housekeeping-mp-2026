@@ -5,6 +5,7 @@ namespace app\api\logic;
 use app\common\logic\BaseLogic;
 use app\common\model\ChatSession;
 use app\common\model\ChatMessage;
+use app\common\model\user\Kefu;
 use app\common\model\user\User;
 use app\common\service\FileService;
 
@@ -113,7 +114,43 @@ class ChatLogic extends BaseLogic
 
         return [
             'session_id' => $session->id,
+            'peer_user' => [
+                'id' => $peerUser->id,
+                'nickname' => $peerUser->nickname,
+                'avatar' => FileService::getFileUrl($peerUser->avatar),
+            ],
         ];
+    }
+
+    /**
+     * 获取客服用户ID
+     * @param int $userId 当前用户ID
+     * @return array|false
+     */
+    public static function getKefu(int $userId)
+    {
+        // 获取所有启用的客服用户ID
+        $kefuUserIds = Kefu::where('status', 1)->column('user_id');
+        if (empty($kefuUserIds)) {
+            self::setError('暂无客服');
+            return false;
+        }
+
+        // 查找用户与客服的最近会话
+        $session = ChatSession::where(function ($query) use ($userId, $kefuUserIds) {
+            $query->where('user1_id', $userId)->whereIn('user2_id', $kefuUserIds);
+        })->whereOr(function ($query) use ($userId, $kefuUserIds) {
+            $query->where('user2_id', $userId)->whereIn('user1_id', $kefuUserIds);
+        })->order('update_time', 'desc')->findOrEmpty();
+
+        if (!$session->isEmpty()) {
+            $kefuUserId = $session->user1_id == $userId ? $session->user2_id : $session->user1_id;
+            return ['user_id' => $kefuUserId];
+        }
+
+        // 随机分配一个客服
+        $randomKey = array_rand($kefuUserIds);
+        return ['user_id' => $kefuUserIds[$randomKey]];
     }
 
     /**

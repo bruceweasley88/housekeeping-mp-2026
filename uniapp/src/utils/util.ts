@@ -1,6 +1,7 @@
 import {isObject} from '@vue/shared'
 import {getToken} from './auth'
 import {parseQuery} from "uniapp-router-next";
+import { createChatSession, getKefuUser } from '@/api/chat'
 
 /**
  * @description 获取元素节点信息（在组件中的元素必须要传ctx）
@@ -199,8 +200,35 @@ export function series(...task: Array<(_arg: any) => any>) {
 }
 
 /**
- * @description 跳转客服（目前显示开发中提示）
+ * @description 与某用户发起聊天（创建会话并跳转聊天页面）
  */
-export function goToCustomerService() {
-    uni.$u.toast('正在开发中')
+export async function chat(userId: number) {
+    uni.showLoading({ title: '加载中', mask: true })
+    try {
+        const res = await createChatSession(userId)
+        uni.hideLoading()
+        if (res?.session_id) {
+            const peerUser = encodeURIComponent(JSON.stringify(res.peer_user))
+            uni.navigateTo({
+                url: `/pages/chat/chat?session_id=${res.session_id}&peer_user=${peerUser}`
+            })
+        }
+    } catch (e) {
+        uni.hideLoading()
+        console.error('创建会话失败', e)
+    }
+}
+
+/**
+ * @description 跳转客服
+ */
+export async function goToCustomerService() {
+    try {
+        const res = await getKefuUser()
+        if (res?.user_id) {
+            chat(res.user_id)
+        }
+    } catch (e) {
+        console.error('获取客服失败', e)
+    }
 }

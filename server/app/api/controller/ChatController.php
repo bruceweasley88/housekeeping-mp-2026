@@ -83,4 +83,16 @@ class ChatController extends BaseApiController
         }
         return $this->success('success');
     }
+
+    /**
+     * 获取客服用户ID
+     */
+    public function getKefu()
+    {
+        $result = ChatLogic::getKefu($this->userId);
+        if ($result === false) {
+            return $this->fail(ChatLogic::getError());
+        }
+        return $this->success('success', $result);
+    }
 }

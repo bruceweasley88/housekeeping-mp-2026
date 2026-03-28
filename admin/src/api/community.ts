@@ -9,3 +9,8 @@ export function getCommunityLists(params: any) {
 export function communityAudit(params: any) {
     return request.post({ url: '/community.community/audit', params })
 }
+
+// 删除小区
+export function communityDelete(params: any) {
+    return request.post({ url: '/community.community/delete', params })
+}

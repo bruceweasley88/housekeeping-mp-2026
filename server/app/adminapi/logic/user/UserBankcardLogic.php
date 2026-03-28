@@ -33,7 +33,7 @@ class UserBankcardLogic extends BaseLogic
                 $bankcard->reject_reason = $params['reject_reason'] ?? '';
             }
             if ($params['status'] == UserBankcardEnum::STATUS_VERIFIED) {
-                $bankcard->verified_at = time();
+                $bankcard->verified_at = date('Y-m-d H:i:s');
             }
             $bankcard->save();
 

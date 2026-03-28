@@ -268,6 +268,7 @@ const handleCancel = () => {
         color: #222929;
         width: 60rpx;
         flex-shrink: 0;
+        margin-right: 20rpx;
     }
 
     .nickname-input {

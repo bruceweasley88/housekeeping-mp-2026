@@ -69,7 +69,7 @@
                     </template>
                 </el-table-column>
                 <el-table-column label="创建时间" prop="create_time" min-width="180" />
-                <el-table-column label="操作" width="160" fixed="right">
+                <el-table-column label="操作" width="200" fixed="right">
                     <template #default="{ row }">
                         <template v-if="row.status === 0">
                             <el-button
@@ -89,7 +89,16 @@
                                 拒绝
                             </el-button>
                         </template>
-                        <span v-else class="text-[#999]">已处理</span>
+                        <template v-else>
+                            <span class="text-[#999]">已处理</span>
+                        </template>
+                        <el-button
+                            type="danger"
+                            link
+                            @click="handleDelete(row.id)"
+                        >
+                            删除
+                        </el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -100,7 +109,7 @@
     </div>
 </template>
 <script lang="ts" setup name="communityLists">
-import { getCommunityLists, communityAudit } from '@/api/community'
+import { getCommunityLists, communityAudit, communityDelete } from '@/api/community'
 import { usePaging } from '@/hooks/usePaging'
 import feedback from '@/utils/feedback'
 
@@ -124,6 +133,13 @@ const handleAudit = async (id: number, status: number) => {
     await feedback.confirm(`确定${actionText}该小区的审核？`)
     await communityAudit({ id, status })
     feedback.msgSuccess('审核成功')
+    getLists()
+}
+
+const handleDelete = async (id: number) => {
+    await feedback.confirm('确定要删除该小区？')
+    await communityDelete({ id })
+    feedback.msgSuccess('删除成功')
     getLists()
 }
 

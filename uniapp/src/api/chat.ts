@@ -29,3 +29,8 @@ export function getChatMessageList(params: {
 export function markChatMessageRead(sessionId: number) {
     return request.post({ url: '/chat/messageRead', data: { session_id: sessionId } }, { isAuth: true })
 }
+
+// 获取客服用户ID
+export function getKefuUser() {
+    return request.get({ url: '/chat/getKefu' }, { isAuth: true })
+}
