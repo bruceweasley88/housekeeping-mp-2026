@@ -348,6 +348,15 @@
 				"meta": {
 					"auth": true
 				}
+			},
+			{
+				"path": "pages/withdraw/withdraw",
+				"style": {
+					"navigationBarTitleText": "提现"
+				},
+				"meta": {
+					"auth": true
+				}
 			}
 		]
 	}],

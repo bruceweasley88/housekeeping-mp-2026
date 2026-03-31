@@ -100,6 +100,7 @@ import { getPosterLists } from '@/api/shop'
 import { getUserAddress } from '@/api/community'
 import { getDemandCategoryLists, getDemandLists } from '@/api/demand'
 import { login } from '@/api/account'
+import { autoSettleBill } from '@/api/bill'
 import { onLoad, onShow, onReady } from "@dcloudio/uni-app";
 import { computed, reactive, ref, watch, onMounted, onUnmounted } from 'vue'
 import LSwiper from '@/components/l-swiper/l-swiper.vue'
@@ -226,6 +227,9 @@ const fetchUserAddress = async () => {
 
 // 封装首页数据加载方法
 const loadPageData = async () => {
+    // 触发自动入账（无需等待结果）
+    autoSettleBill()
+
     // 先并行加载不依赖地址的数据
     await Promise.all([
         fetchPosters(),

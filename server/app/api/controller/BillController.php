@@ -10,7 +10,16 @@ use app\api\validate\BillValidate;
  */
 class BillController extends BaseApiController
 {
-    public array $notNeedLogin = [];
+    public array $notNeedLogin = ['autoSettle'];
+
+    /**
+     * 自动入账（无需登录）
+     */
+    public function autoSettle()
+    {
+        BillLogic::autoSettle();
+        return $this->success('ok');
+    }
 
     /**
      * 账单列表（需登录）

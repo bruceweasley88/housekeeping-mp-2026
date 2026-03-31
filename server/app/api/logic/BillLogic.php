@@ -94,6 +94,20 @@ class BillLogic extends BaseLogic
     }
 
     /**
+     * 自动入账：将超过阈值的待入账账单改为已入账
+     * @return int 更新数量
+     */
+    public static function autoSettle(): int
+    {
+        // TODO: 测试用1分钟，上线前改为7天 (7 * 24 * 3600)
+        $threshold = 60;
+        $count = Bill::where('status', BillEnum::STATUS_PENDING)
+            ->where('create_time', '<=', time() - $threshold)
+            ->update(['status' => BillEnum::STATUS_SETTLED]);
+        return (int) $count;
+    }
+
+    /**
      * 账单列表（包含汇总）
      * @param int $userId 用户ID
      * @return array
@@ -103,6 +117,7 @@ class BillLogic extends BaseLogic
         // 查询汇总数据
         $income = Bill::where('user_id', $userId)
             ->where('type', BillEnum::TYPE_INCOME)
+            ->where('status', BillEnum::STATUS_SETTLED)
             ->sum('amount');
 
         $expense = Bill::where('user_id', $userId)

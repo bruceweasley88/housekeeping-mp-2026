@@ -9,14 +9,6 @@
                 <view class="card-amount">{{ income }}</view>
             </view>
             <view class="card-right">
-                <navigator
-                    class="withdraw-link"
-                    url="/packages/pages/withdraw-detail/withdraw-detail"
-                    hover-class="none"
-                >
-                    提现详情
-                    <image class="arrow-icon" src="./assets/img/icon_arrow_right.png" />
-                </navigator>
                 <view class="card-label">我的支出（元）</view>
                 <view class="card-amount">{{ expense }}</view>
             </view>
@@ -54,8 +46,8 @@
                     <text class="item-amount" :class="{ income: item.type === 1 }">
                         {{ item.type === 1 ? '+' : '-' }}¥{{ item.amount }}
                     </text>
-                    <text class="item-status" :class="{ pending: item.status === 0 }">
-                        {{ item.status === 1 ? '已入账' : '待入账' }}
+                    <text class="item-status" :class="{ pending: item.status === 1 }">
+                        {{ item.status === 2 ? '已入账' : '待入账' }}
                     </text>
                 </view>
             </view>
@@ -112,10 +104,7 @@ const changeTab = (index: number) => {
 
 // 立即提现
 const handleWithdraw = () => {
-    uni.showToast({
-        title: '提现功能开发中',
-        icon: 'none'
-    })
+    uni.navigateTo({ url: '/packages/pages/withdraw/withdraw' })
 }
 
 // 页面显示时加载数据
@@ -144,6 +133,7 @@ onShow(() => {
     border-radius: 29rpx;
     display: flex;
     justify-content: space-between;
+    align-items: flex-end;
 }
 
 .card-left {
@@ -169,21 +159,6 @@ onShow(() => {
     font-size: 36rpx;
     font-weight: 500;
     color: #000;
-}
-
-.withdraw-link {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    font-size: 24rpx;
-    color: #999;
-    margin-bottom: 27rpx;
-
-    .arrow-icon {
-        width: 9rpx;
-        height: 15rpx;
-        margin-left: 8rpx;
-    }
 }
 
 .withdraw-btn {
@@ -238,12 +213,18 @@ onShow(() => {
     display: flex;
     flex-direction: column;
     gap: 4rpx;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .item-title {
-    font-size: 33rpx;
+    font-size: 28rpx;
     font-weight: 500;
     color: #333;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .item-time {
@@ -256,6 +237,8 @@ onShow(() => {
     flex-direction: column;
     align-items: flex-end;
     gap: 4rpx;
+    flex-shrink: 0;
+    margin-left: 20rpx;
 }
 
 .item-amount {
