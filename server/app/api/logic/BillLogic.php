@@ -108,6 +108,63 @@ class BillLogic extends BaseLogic
     }
 
     /**
+     * 提现申请
+     * @param int $userId 用户ID
+     * @param float $amount 提现金额
+     * @return bool
+     */
+    public static function withdraw(int $userId, float $amount): bool
+    {
+        try {
+            Db::startTrans();
+
+            // 计算可用余额
+            $income = Bill::where('user_id', $userId)
+                ->where('type', BillEnum::TYPE_INCOME)
+                ->where('status', BillEnum::STATUS_SETTLED)
+                ->sum('amount');
+
+            $expense = Bill::where('user_id', $userId)
+                ->where('type', BillEnum::TYPE_EXPENSE)
+                ->whereIn('status', [BillEnum::STATUS_PENDING, BillEnum::STATUS_SETTLED])
+                ->sum('amount');
+
+            $balance = round($income - $expense, 2);
+
+            if ($amount > $balance) {
+                throw new \Exception('余额不足');
+            }
+
+            if ($amount <= 0) {
+                throw new \Exception('提现金额必须大于0');
+            }
+
+            // 生成账单编号
+            $billNo = Bill::generateBillNo();
+
+            // 创建支出记录
+            Bill::create([
+                'bill_no' => $billNo,
+                'user_id' => $userId,
+                'demand_id' => 0,
+                'demand_no' => '',
+                'type' => BillEnum::TYPE_EXPENSE,
+                'amount' => $amount,
+                'status' => BillEnum::STATUS_PENDING,
+                'remark' => '提现申请',
+                'service_rate' => 3,
+            ]);
+
+            Db::commit();
+            return true;
+        } catch (\Exception $e) {
+            Db::rollback();
+            self::setError($e->getMessage());
+            return false;
+        }
+    }
+
+    /**
      * 账单列表（包含汇总）
      * @param int $userId 用户ID
      * @return array
@@ -122,7 +179,10 @@ class BillLogic extends BaseLogic
 
         $expense = Bill::where('user_id', $userId)
             ->where('type', BillEnum::TYPE_EXPENSE)
+            ->whereIn('status', [BillEnum::STATUS_PENDING, BillEnum::STATUS_SETTLED])
             ->sum('amount');
+
+        $balance = round($income - $expense, 2);
 
         // 查询账单列表（返回全部，前端过滤）
         $list = Bill::where('user_id', $userId)
@@ -136,19 +196,24 @@ class BillLogic extends BaseLogic
         // 格式化列表数据
         $billList = [];
         foreach ($list as $item) {
+            $title = $item['type'] == BillEnum::TYPE_EXPENSE
+                ? '提现'
+                : ($item['demand']['title'] ?? '需求结算');
             $billList[] = [
                 'id' => $item['id'],
-                'title' => $item['demand']['title'] ?? '需求结算',
+                'title' => $title,
                 'time' => date('Y.m.d H:i', strtotime($item['create_time'])),
                 'amount' => number_format($item['amount'], 2, '.', ''),
                 'type' => $item['type'],
                 'status' => $item['status'],
+                'remark' => $item['remark'] ?? '',
             ];
         }
 
         return [
             'income' => number_format($income, 2, '.', ''),
             'expense' => number_format($expense, 2, '.', ''),
+            'balance' => number_format($balance, 2, '.', ''),
             'list' => $billList,
         ];
     }

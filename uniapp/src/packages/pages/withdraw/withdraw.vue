@@ -25,7 +25,7 @@
             </view>
             <view class="line" />
             <view class="fee-row">
-                <text class="fee-label">手续费</text>
+                <text class="fee-label">手续费(3%)</text>
                 <text class="fee-value">{{ feeText }}</text>
             </view>
             <view class="bank-row" @click="handleGoBankCard">
@@ -39,7 +39,7 @@
 
         <!-- 说明 -->
         <view class="desc">
-            说明：提现将产生手续费，提交申请后提现金额会在T+2周期内打款到上传的银行卡内，请您耐心等待。
+            说明：提现将产生3%手续费，提交申请后提现金额会在T+2周期内打款到上传的银行卡内，请您耐心等待。
         </view>
 
         <!-- 提交按钮 -->
@@ -51,22 +51,34 @@
 import { ref, computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { getUserBankcardDetail } from '@/api/userBankcard'
+import { getBillLists, withdrawBill } from '@/api/bill'
 
 const balance = ref('0.00')
 const amount = ref('')
+const submitting = ref(false)
 // 银行卡状态: null=未提交, 0=待审核, 1=已通过, 2=已拒绝
 const bankCardStatus = ref<number | null>(null)
 
 const feeText = computed(() => {
-    if (!amount.value) return '输入金额自动显示'
-    // TODO: 根据实际手续费规则计算
-    return '¥0.00'
+    const val = Number(amount.value)
+    if (!val || val <= 0) return '输入金额自动显示'
+    const fee = (val * 0.03).toFixed(2)
+    return `¥${fee}`
 })
 
 const bankText = computed(() => {
     if (bankCardStatus.value === 1) return '已上传银行卡'
     return '上传银行卡'
 })
+
+const fetchBalance = async () => {
+    try {
+        const res = await getBillLists()
+        balance.value = res.balance || '0.00'
+    } catch (e) {
+        console.error('获取余额失败', e)
+    }
+}
 
 const fetchBankCardStatus = async () => {
     try {
@@ -89,20 +101,36 @@ const handleGoBankCard = () => {
     uni.navigateTo({ url: '/packages/pages/upload-bankcard/upload-bankcard' })
 }
 
-const handleSubmit = () => {
+const handleSubmit = async () => {
     if (!amount.value || Number(amount.value) <= 0) {
         uni.showToast({ title: '请输入提现金额', icon: 'none' })
+        return
+    }
+    if (Number(amount.value) > Number(balance.value)) {
+        uni.showToast({ title: '余额不足', icon: 'none' })
         return
     }
     if (bankCardStatus.value !== 1) {
         uni.navigateTo({ url: '/packages/pages/upload-bankcard/upload-bankcard' })
         return
     }
-    // TODO: 调用提现接口
-    uni.showToast({ title: '提现申请已提交', icon: 'none' })
+    if (submitting.value) return
+    submitting.value = true
+    try {
+        await withdrawBill(Number(amount.value))
+        uni.showToast({ title: '提现申请已提交', icon: 'none' })
+        setTimeout(() => {
+            uni.navigateBack()
+        }, 1500)
+    } catch (error: any) {
+        uni.showToast({ title: error || '提现失败', icon: 'none' })
+    } finally {
+        submitting.value = false
+    }
 }
 
 onShow(() => {
+    fetchBalance()
     fetchBankCardStatus()
 })
 </script>

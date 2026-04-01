@@ -41,13 +41,17 @@
                 <view class="item-info">
                     <text class="item-title">{{ item.title }}</text>
                     <text class="item-time">{{ item.time }}</text>
+                    <!-- 拒绝原因 -->
+                    <text v-if="item.status === 3 && item.remark" class="item-reject-reason">
+                        拒绝原因：{{ item.remark }}
+                    </text>
                 </view>
                 <view class="item-amount-wrap">
                     <text class="item-amount" :class="{ income: item.type === 1 }">
                         {{ item.type === 1 ? '+' : '-' }}¥{{ item.amount }}
                     </text>
-                    <text class="item-status" :class="{ pending: item.status === 1 }">
-                        {{ item.status === 2 ? '已入账' : '待入账' }}
+                    <text class="item-status" :class="statusClass(item)">
+                        {{ statusText(item) }}
                     </text>
                 </view>
             </view>
@@ -100,6 +104,25 @@ const loadBillData = async () => {
 // 切换 Tab
 const changeTab = (index: number) => {
     current.value = index
+}
+
+// 状态文案
+const statusText = (item: any) => {
+    if (item.type === 1) {
+        // 收入：1=待入账, 2=已入账
+        return item.status === 2 ? '已入账' : '待入账'
+    }
+    // 支出：1=审核中, 2=已提取, 3=已拒绝
+    if (item.status === 2) return '已提取'
+    if (item.status === 3) return '已拒绝'
+    return '审核中'
+}
+
+// 状态样式
+const statusClass = (item: any) => {
+    if (item.status === 1) return 'pending'
+    if (item.status === 3) return 'rejected'
+    return ''
 }
 
 // 立即提现
@@ -259,6 +282,15 @@ onShow(() => {
     &.pending {
         color: #FF7E22;
     }
+
+    &.rejected {
+        color: #F04530;
+    }
+}
+
+.item-reject-reason {
+    font-size: 24rpx;
+    color: #F04530;
 }
 
 .empty-state {

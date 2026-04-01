@@ -39,3 +39,18 @@ export function refundLog(params?: any) {
 export function refundStat(params?: any) {
     return request.get({ url: '/finance.refund/stat', params })
 }
+
+// 提现记录列表
+export function getWithdrawLists(params?: any) {
+    return request.get({ url: '/finance.bill/lists', params })
+}
+
+// 审核通过提现
+export function approveWithdraw(data: { id: number }) {
+    return request.post({ url: '/finance.bill/approve', data })
+}
+
+// 审核拒绝提现
+export function rejectWithdraw(data: { id: number; remark: string }) {
+    return request.post({ url: '/finance.bill/reject', data })
+}

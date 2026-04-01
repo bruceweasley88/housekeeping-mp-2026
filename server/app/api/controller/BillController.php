@@ -42,4 +42,17 @@ class BillController extends BaseApiController
         }
         return $this->fail(BillLogic::getError());
     }
+
+    /**
+     * 提现申请（需登录）
+     */
+    public function withdraw()
+    {
+        $params = (new BillValidate())->post()->goCheck('withdraw');
+        $result = BillLogic::withdraw($this->userId, $params['amount']);
+        if ($result === true) {
+            return $this->success('提现申请已提交');
+        }
+        return $this->fail(BillLogic::getError());
+    }
 }

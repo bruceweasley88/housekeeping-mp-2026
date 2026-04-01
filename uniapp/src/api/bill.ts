@@ -14,3 +14,8 @@ export function autoSettleBill() {
 export function settleDemand(demand_id: number) {
     return request.post({ url: '/bill/settle', data: { demand_id } }, { isAuth: true })
 }
+
+// 提现申请
+export function withdrawBill(amount: number) {
+    return request.post({ url: '/bill/withdraw', data: { amount } }, { isAuth: true })
+}
