@@ -52,7 +52,7 @@ class BillWithdrawLists extends BaseAdminDataLists implements ListsSearchInterfa
      */
     public function lists(): array
     {
-        $field = 'b.id,b.bill_no,b.amount,b.status,b.remark,b.service_rate,b.create_time,'
+        $field = 'b.id,b.bill_no,b.amount,b.status,b.remark,b.create_time,'
             . 'u.nickname,u.mobile,'
             . 'ub.real_name as bank_real_name,ub.bankcard_image';
 
