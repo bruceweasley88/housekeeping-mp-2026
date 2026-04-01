@@ -32,24 +32,28 @@
 
         <el-card class="!border-none mt-4" shadow="never">
             <el-table size="large" v-loading="pager.loading" :data="pager.lists">
-                <el-table-column label="账单编号" prop="bill_no" min-width="180" />
                 <el-table-column label="用户信息" min-width="140">
                     <template #default="{ row }">
                         <div>{{ row.nickname }}</div>
                         <div class="text-xs text-gray-400">{{ row.mobile }}</div>
                     </template>
                 </el-table-column>
-                <el-table-column label="提现金额" min-width="100">
+                <el-table-column label="提现金额" min-width="120">
                     <template #default="{ row }">
                         ¥{{ row.amount }}
                     </template>
                 </el-table-column>
-                <el-table-column label="手续费率" min-width="80">
+                <el-table-column label="手续费率" min-width="120">
                     <template #default="{ row }">
-                        {{ row.service_rate }}%
+                        3%
                     </template>
                 </el-table-column>
-                <el-table-column label="状态" min-width="80">
+                <el-table-column label="到手金额" min-width="120">
+                    <template #default="{ row }">
+                        ¥{{ (row.amount * 0.97).toFixed(2) }}
+                    </template>
+                </el-table-column>
+                <el-table-column label="状态" min-width="120">
                     <template #default="{ row }">
                         <el-tag v-if="row.status === 1" type="warning">审核中</el-tag>
                         <el-tag v-else-if="row.status === 2" type="success">已提取</el-tag>

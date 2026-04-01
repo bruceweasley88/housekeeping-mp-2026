@@ -52,7 +52,7 @@ class BillLogic extends BaseLogic
             $originalAmount = $demand->amount;           // 原始金额
             $serviceRate = $demand->service_rate;        // 服务费率
             $serviceFee = round($originalAmount * $serviceRate / 100, 2);  // 服务费
-            $settleAmount = round($originalAmount - $serviceFee, 2);       // 结算金额
+            $settleAmount = round($originalAmount + $serviceFee, 2);       // 结算金额
 
             // 生成账单编号
             $billNo = Bill::generateBillNo();
@@ -64,7 +64,7 @@ class BillLogic extends BaseLogic
                 'demand_id' => $demandId,
                 'demand_no' => $demand->demand_no,
                 'type' => BillEnum::TYPE_INCOME,          // 收入
-                'amount' => $settleAmount,                // 实际到账金额
+                'amount' => $originalAmount,              // 原始金额（承接人实际到账）
                 'status' => BillEnum::STATUS_PENDING,     // 待入账
                 'remark' => '需求结算收入',
                 'settle_time' => time(),
@@ -79,7 +79,7 @@ class BillLogic extends BaseLogic
             NoticeLogic::addNotice(
                 $demand->accept_user_id,
                 '需求已结算到账',
-                '您承接的需求已完成结算，金额 ¥' . number_format($settleAmount, 2) . ' 已入账，可在我的账单查看详情。',
+                '您承接的需求已完成结算，金额 ¥' . number_format($originalAmount, 2) . ' 已入账，可在我的账单查看详情。',
                 'demand',
                 $demand->id
             );
@@ -152,7 +152,6 @@ class BillLogic extends BaseLogic
                 'amount' => $amount,
                 'status' => BillEnum::STATUS_PENDING,
                 'remark' => '提现申请',
-                'service_rate' => 3,
             ]);
 
             Db::commit();
