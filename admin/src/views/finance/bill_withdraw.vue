@@ -34,7 +34,7 @@
         <div class="flex gap-4 mt-4">
             <el-card class="!border-none flex-1" shadow="never">
                 <div class="text-center">
-                    <div class="text-gray-500 text-sm">总提现</div>
+                    <div class="text-gray-500 text-sm">已提取</div>
                     <div class="text-2xl font-bold text-blue-600 mt-1">{{ summaryData.total.count }} 笔</div>
                     <div class="text-lg text-blue-600">¥{{ formatMoney(summaryData.total.amount) }}</div>
                 </div>

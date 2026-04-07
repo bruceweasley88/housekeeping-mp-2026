@@ -38,10 +38,11 @@ class BillController extends BaseAdminController
             $where[] = ['b.create_time', '<=', strtotime($params['end_time'])];
         }
 
-        // 全部提现统计
+        // 已提取统计
+        $settledWhere = array_merge($where, [['b.status', '=', BillEnum::STATUS_SETTLED]]);
         $totalStats = Bill::alias('b')
             ->join('user u', 'u.id = b.user_id')
-            ->where($where)
+            ->where($settledWhere)
             ->field('COUNT(*) as count, COALESCE(SUM(b.amount), 0) as amount')
             ->find();
 
