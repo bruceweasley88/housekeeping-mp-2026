@@ -7,7 +7,7 @@
                         v-model="queryParams.user_info"
                         placeholder="昵称/手机号"
                         clearable
-                        @keyup.enter="resetPage"
+                        @keyup.enter="onSearch"
                     />
                 </el-form-item>
                 <el-form-item class="w-[280px]" label="状态">
@@ -24,11 +24,29 @@
                     />
                 </el-form-item>
                 <el-form-item>
-                    <el-button type="primary" @click="resetPage">查询</el-button>
-                    <el-button @click="resetParams">重置</el-button>
+                    <el-button type="primary" @click="onSearch">查询</el-button>
+                    <el-button @click="onReset">重置</el-button>
                 </el-form-item>
             </el-form>
         </el-card>
+
+        <!-- 统计卡片 -->
+        <div class="flex gap-4 mt-4">
+            <el-card class="!border-none flex-1" shadow="never">
+                <div class="text-center">
+                    <div class="text-gray-500 text-sm">总提现</div>
+                    <div class="text-2xl font-bold text-blue-600 mt-1">{{ summaryData.total.count }} 笔</div>
+                    <div class="text-lg text-blue-600">¥{{ formatMoney(summaryData.total.amount) }}</div>
+                </div>
+            </el-card>
+            <el-card class="!border-none flex-1" shadow="never">
+                <div class="text-center">
+                    <div class="text-gray-500 text-sm">已拒绝</div>
+                    <div class="text-2xl font-bold text-red-500 mt-1">{{ summaryData.rejected.count }} 笔</div>
+                    <div class="text-lg text-red-500">¥{{ formatMoney(summaryData.rejected.amount) }}</div>
+                </div>
+            </el-card>
+        </div>
 
         <el-card class="!border-none mt-4" shadow="never">
             <el-table size="large" v-loading="pager.loading" :data="pager.lists">
@@ -134,7 +152,7 @@
 </template>
 
 <script lang="ts" setup name="billWithdraw">
-import { getWithdrawLists, approveWithdraw, rejectWithdraw } from '@/api/finance'
+import { getWithdrawLists, approveWithdraw, rejectWithdraw, getWithdrawSummary } from '@/api/finance'
 import { usePaging } from '@/hooks/usePaging'
 import feedback from '@/utils/feedback'
 
@@ -150,12 +168,50 @@ const { pager, getLists, resetPage, resetParams } = usePaging({
     params: queryParams,
 })
 
+// 统计数据
+const summaryData = ref({
+    total: { count: 0, amount: 0 },
+    rejected: { count: 0, amount: 0 },
+})
+
+const formatMoney = (val: number) => {
+    return Number(val).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+const fetchSummary = async () => {
+    try {
+        const res: any = await getWithdrawSummary({
+            user_info: queryParams.user_info,
+            start_time: queryParams.start_time,
+            end_time: queryParams.end_time,
+        })
+        summaryData.value = res
+    } catch (err) {
+        console.error('获取提现统计失败', err)
+    }
+}
+
+const refreshData = () => {
+    getLists()
+    fetchSummary()
+}
+
+const onSearch = () => {
+    resetPage()
+    fetchSummary()
+}
+
+const onReset = () => {
+    resetParams()
+    fetchSummary()
+}
+
 // 审核通过
 const handleApprove = async (id: number) => {
     await feedback.confirm('确认通过该提现申请？')
     await approveWithdraw({ id })
     feedback.msgSuccess('审核通过')
-    getLists()
+    refreshData()
 }
 
 // 拒绝弹窗
@@ -183,11 +239,12 @@ const confirmReject = async () => {
         await rejectWithdraw({ id: rejectForm.id, remark: rejectForm.remark })
         feedback.msgSuccess('已拒绝')
         showRejectDialog.value = false
-        getLists()
+        refreshData()
     } finally {
         rejectLoading.value = false
     }
 }
 
 getLists()
+fetchSummary()
 </script>

@@ -45,6 +45,11 @@ export function getWithdrawLists(params?: any) {
     return request.get({ url: '/finance.bill/lists', params })
 }
 
+// 提现统计汇总
+export function getWithdrawSummary(params?: any) {
+    return request.get({ url: '/finance.bill/summary', params })
+}
+
 // 审核通过提现
 export function approveWithdraw(data: { id: number }) {
     return request.post({ url: '/finance.bill/approve', data })
