@@ -73,7 +73,6 @@
                     <template #default="{ row }">
                         <template v-if="row.status === 0">
                             <el-button
-                                v-perms="['community.community/audit']"
                                 type="success"
                                 link
                                 @click="handleAudit(row.id, 1)"
@@ -81,7 +80,6 @@
                                 通过
                             </el-button>
                             <el-button
-                                v-perms="['community.community/audit']"
                                 type="danger"
                                 link
                                 @click="handleAudit(row.id, 2)"

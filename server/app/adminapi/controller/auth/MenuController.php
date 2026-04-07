@@ -134,7 +134,8 @@ class MenuController extends BaseAdminController
      */
     public function all()
     {
-        $result = MenuLogic::getAllData();
+        $root = $this->adminInfo['root'] ?? 0;
+        $result = MenuLogic::getAllData($root);
         return $this->data($result);
     }
 

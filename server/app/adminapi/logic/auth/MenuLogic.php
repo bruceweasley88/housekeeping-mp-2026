@@ -170,11 +170,17 @@ class MenuLogic extends BaseLogic
      * @author 段誉
      * @date 2022/10/13 11:03
      */
-    public static function getAllData()
+    public static function getAllData(int $root = 1)
     {
-        $data = SystemMenu::where(['is_disable' => YesNoEnum::NO])
-            ->field('id,pid,name')
-            ->order(['sort' => 'desc', 'id' => 'desc'])
+        $query = SystemMenu::where(['is_disable' => YesNoEnum::NO])
+            ->field('id,pid,name');
+
+        // 非超级管理员只能看到排序 < 100 的菜单
+        if ($root != 1) {
+            $query = $query->where('sort', '<', 100);
+        }
+
+        $data = $query->order(['sort' => 'desc', 'id' => 'desc'])
             ->select()
             ->toArray();
 

@@ -32,7 +32,7 @@
                 <el-form-item label="名称" prop="name">
                     <el-input v-model="formData.name" placeholder="请输入名称" clearable />
                 </el-form-item>
-                <el-form-item label="归属部门" prop="dept_id">
+                <el-form-item label="归属部门" prop="dept_id" v-show="false">
                     <el-tree-select
                         class="flex-1"
                         v-model="formData.dept_id"
@@ -52,7 +52,7 @@
                         placeholder="请选择上级部门"
                     />
                 </el-form-item>
-                <el-form-item label="岗位" prop="jobs_id">
+                <el-form-item label="岗位" prop="jobs_id" v-show="false">
                     <el-select
                         class="flex-1"
                         v-model="formData.jobs_id"
@@ -109,12 +109,12 @@
                 </el-form-item>
 
                 <!-- 管理员状态 -->
-                <el-form-item label="管理员状态" v-if="formData.root != 1">
+                <el-form-item label="管理员状态" v-if="formData.root != 1" v-show="false">
                     <el-switch v-model="formData.disable" :active-value="0" :inactive-value="1" />
                 </el-form-item>
 
                 <!-- 多处登录 -->
-                <el-form-item label="多处登录">
+                <el-form-item label="多处登录" v-show="false">
                     <div>
                         <el-switch
                             v-model="formData.multipoint_login"

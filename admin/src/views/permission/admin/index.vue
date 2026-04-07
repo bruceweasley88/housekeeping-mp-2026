@@ -64,16 +64,16 @@
                         min-width="100"
                         show-tooltip-when-overflow
                     />
-                    <el-table-column
+                    <!-- <el-table-column
                         label="部门"
                         prop="dept_name"
                         min-width="100"
                         show-tooltip-when-overflow
-                    />
+                    /> -->
                     <el-table-column label="创建时间" prop="create_time" min-width="180" />
                     <el-table-column label="最近登录时间" prop="login_time" min-width="180" />
                     <el-table-column label="最近登录IP" prop="login_ip" min-width="120" />
-                    <el-table-column label="状态" min-width="100" v-perms="['auth.admin/edit']">
+                    <!-- <el-table-column label="状态" min-width="100" v-perms="['auth.admin/edit']">
                         <template #default="{ row }">
                             <el-switch
                                 v-if="row.root != 1"
@@ -83,7 +83,7 @@
                                 @change="changeStatus(row)"
                             />
                         </template>
-                    </el-table-column>
+                    </el-table-column> -->
                     <el-table-column label="操作" width="120" fixed="right">
                         <template #default="{ row }">
                             <el-button
