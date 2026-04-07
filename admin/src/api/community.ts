@@ -5,6 +5,11 @@ export function getCommunityLists(params: any) {
     return request.get({ url: '/community.community/lists', params }, { ignoreCancelToken: true })
 }
 
+// 小区总览统计
+export function communityStat() {
+    return request.get({ url: '/community.community/stat' })
+}
+
 // 审核小区
 export function communityAudit(params: any) {
     return request.post({ url: '/community.community/audit', params })

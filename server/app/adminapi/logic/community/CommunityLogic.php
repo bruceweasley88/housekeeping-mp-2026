@@ -5,6 +5,7 @@ namespace app\adminapi\logic\community;
 use app\common\enum\CommunityEnum;
 use app\common\logic\BaseLogic;
 use app\common\model\Community;
+use app\common\model\user\User;
 
 /**
  * 小区管理逻辑
@@ -13,6 +14,18 @@ use app\common\model\Community;
  */
 class CommunityLogic extends BaseLogic
 {
+    /**
+     * @notes 小区总览统计（全局数据，不参与筛选）
+     * @return array
+     */
+    public static function stat(): array
+    {
+        return [
+            'enabled_total' => Community::where('status', CommunityEnum::STATUS_ENABLE)->count(),
+            'audit_total'   => Community::where('status', CommunityEnum::STATUS_AUDIT)->count(),
+        ];
+    }
+
     /**
      * @notes 添加小区
      * @param array $params

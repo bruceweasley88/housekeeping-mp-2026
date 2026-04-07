@@ -7,6 +7,7 @@ use app\common\enum\CommunityEnum;
 use app\common\lists\ListsSearchInterface;
 use app\common\lists\ListsSortInterface;
 use app\common\model\Community;
+use app\common\model\user\User;
 
 /**
  * 小区列表
@@ -58,6 +59,10 @@ class CommunityLists extends BaseAdminDataLists implements ListsSearchInterface,
             ->order($this->sortOrder)
             ->select()
             ->toArray();
+
+        foreach ($list as &$item) {
+            $item['user_count'] = User::where('community_id', $item['id'])->count();
+        }
 
         return $list;
     }

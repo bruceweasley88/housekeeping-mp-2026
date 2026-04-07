@@ -54,6 +54,18 @@
             </el-form>
         </el-card>
         <el-card class="!border-none mt-4" shadow="never">
+            <div class="flex flex-wrap">
+                <div class="w-1/2 md:w-1/4">
+                    <div class="leading-10">已入驻小区总数</div>
+                    <div class="text-6xl">{{ statData.enabled_total }}</div>
+                </div>
+                <div class="w-1/2 md:w-1/4">
+                    <div class="leading-10">待审批小区总数</div>
+                    <div class="text-6xl">{{ statData.audit_total }}</div>
+                </div>
+            </div>
+        </el-card>
+        <el-card class="!border-none mt-4" shadow="never">
             <el-table size="large" v-loading="pager.loading" :data="pager.lists">
                 <el-table-column label="ID" prop="id" min-width="80" />
                 <el-table-column label="小区名称" prop="name" min-width="120" show-overflow-tooltip />
@@ -68,6 +80,7 @@
                         <el-tag v-else-if="row.status === 2" type="danger">已拒绝</el-tag>
                     </template>
                 </el-table-column>
+                <el-table-column label="注册用户数" prop="user_count" min-width="100" />
                 <el-table-column label="创建时间" prop="create_time" min-width="180" />
                 <el-table-column label="操作" width="200" fixed="right">
                     <template #default="{ row }">
@@ -107,7 +120,7 @@
     </div>
 </template>
 <script lang="ts" setup name="communityLists">
-import { getCommunityLists, communityAudit, communityDelete } from '@/api/community'
+import { getCommunityLists, communityAudit, communityDelete, communityStat } from '@/api/community'
 import { usePaging } from '@/hooks/usePaging'
 import feedback from '@/utils/feedback'
 
@@ -126,12 +139,23 @@ const { pager, getLists, resetPage, resetParams } = usePaging({
     params: queryParams
 })
 
+const statData = reactive({
+    enabled_total: 0,
+    audit_total: 0
+})
+
+const getStat = async () => {
+    const res = await communityStat()
+    Object.assign(statData, res)
+}
+
 const handleAudit = async (id: number, status: number) => {
     const actionText = status === 1 ? '通过' : '拒绝'
     await feedback.confirm(`确定${actionText}该小区的审核？`)
     await communityAudit({ id, status })
     feedback.msgSuccess('审核成功')
     getLists()
+    getStat()
 }
 
 const handleDelete = async (id: number) => {
@@ -139,11 +163,14 @@ const handleDelete = async (id: number) => {
     await communityDelete({ id })
     feedback.msgSuccess('删除成功')
     getLists()
+    getStat()
 }
 
 onActivated(() => {
     getLists()
+    getStat()
 })
 
 getLists()
+getStat()
 </script>

@@ -15,6 +15,16 @@ use app\adminapi\validate\community\CommunityValidate;
 class CommunityController extends BaseAdminController
 {
     /**
+     * @notes 小区总览统计
+     * @return \think\response\Json
+     */
+    public function stat()
+    {
+        $result = CommunityLogic::stat();
+        return $this->success('', $result);
+    }
+
+    /**
      * @notes 查看小区列表
      * @return \think\response\Json
      */
