@@ -18,9 +18,6 @@
                             <span class="ml-2 text-gray-500">%</span>
                         </div>
                     </el-form-item>
-                    <div class="text-sm text-gray-400 px-[10px]">
-                        用户发布紧急需求时收取的服务费率，结算时按此比例计算。
-                    </div>
                 </el-card>
                 <el-card shadow="never" class="!border-none flex-1">
                     <div class="text-xl font-medium mb-[20px]">提现手续费</div>
@@ -37,9 +34,6 @@
                             <span class="ml-2 text-gray-500">%</span>
                         </div>
                     </el-form-item>
-                    <div class="text-sm text-gray-400 px-[10px]">
-                        用户提现时收取的手续费率，用于展示到手金额。
-                    </div>
                 </el-card>
             </div>
         </el-form>
