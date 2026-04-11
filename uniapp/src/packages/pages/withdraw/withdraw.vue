@@ -25,7 +25,7 @@
             </view>
             <view class="line" />
             <view class="fee-row">
-                <text class="fee-label">手续费(3%)</text>
+                <text class="fee-label">手续费({{ feeRate }}%)</text>
                 <text class="fee-value">{{ feeText }}</text>
             </view>
             <view class="bank-row" @click="handleGoBankCard">
@@ -39,7 +39,7 @@
 
         <!-- 说明 -->
         <view class="desc">
-            说明：提现将产生3%手续费，提交申请后提现金额会在T+2周期内打款到上传的银行卡内，请您耐心等待。
+            说明：提现将产生{{ feeRate }}%手续费，提交申请后提现金额会在T+2周期内打款到上传的银行卡内，请您耐心等待。
         </view>
 
         <!-- 提交按钮 -->
@@ -52,6 +52,9 @@ import { ref, computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { getUserBankcardDetail } from '@/api/userBankcard'
 import { getBillLists, withdrawBill } from '@/api/bill'
+import { useAppStore } from '@/stores/app'
+
+const appStore = useAppStore()
 
 const balance = ref('0.00')
 const amount = ref('')
@@ -59,10 +62,15 @@ const submitting = ref(false)
 // 银行卡状态: null=未提交, 0=待审核, 1=已通过, 2=已拒绝
 const bankCardStatus = ref<number | null>(null)
 
+const feeRate = computed(() => {
+    const config = appStore.getFeeConfig
+    return config.withdraw_fee_rate ?? 3
+})
+
 const feeText = computed(() => {
     const val = Number(amount.value)
     if (!val || val <= 0) return '输入金额自动显示'
-    const fee = (val * 0.03).toFixed(2)
+    const fee = (val * feeRate.value / 100).toFixed(2)
     return `¥${fee}`
 })
 

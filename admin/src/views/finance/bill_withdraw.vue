@@ -63,12 +63,12 @@
                 </el-table-column>
                 <el-table-column label="手续费率" min-width="120">
                     <template #default="{ row }">
-                        3%
+                        {{ withdrawFeeRate }}%
                     </template>
                 </el-table-column>
                 <el-table-column label="到手金额" min-width="120">
                     <template #default="{ row }">
-                        ¥{{ (row.amount * 0.97).toFixed(2) }}
+                        ¥{{ (row.amount * (1 - withdrawFeeRate / 100)).toFixed(2) }}
                     </template>
                 </el-table-column>
                 <el-table-column label="状态" min-width="120">
@@ -153,6 +153,7 @@
 
 <script lang="ts" setup name="billWithdraw">
 import { getWithdrawLists, approveWithdraw, rejectWithdraw, getWithdrawSummary } from '@/api/finance'
+import { getFeeSettings } from '@/api/setting/fee'
 import { usePaging } from '@/hooks/usePaging'
 import feedback from '@/utils/feedback'
 
@@ -173,6 +174,18 @@ const summaryData = ref({
     total: { count: 0, amount: 0 },
     rejected: { count: 0, amount: 0 },
 })
+
+// 手续费率
+const withdrawFeeRate = ref(3)
+
+const fetchFeeRate = async () => {
+    try {
+        const res: any = await getFeeSettings()
+        withdrawFeeRate.value = res.withdraw_fee_rate
+    } catch (err) {
+        console.error('获取手续费率失败', err)
+    }
+}
 
 const formatMoney = (val: number) => {
     return Number(val).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -247,4 +260,5 @@ const confirmReject = async () => {
 
 getLists()
 fetchSummary()
+fetchFeeRate()
 </script>

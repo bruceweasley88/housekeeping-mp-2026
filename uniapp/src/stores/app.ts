@@ -18,6 +18,7 @@ export const useAppStore = defineStore({
         getStyleConfig: (state) => state.config.style || {},
         getH5Config: (state) => state.config.webPage || {},
         getCopyrightConfig: (state) => state.config.copyright || [],
+        getFeeConfig: (state) => state.config.fee || { urgent_fee_rate: 3, withdraw_fee_rate: 3 },
     },
     actions: {
         getImageUrl(url: string) {

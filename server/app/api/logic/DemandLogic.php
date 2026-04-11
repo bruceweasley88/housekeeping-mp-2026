@@ -8,6 +8,7 @@ use app\common\enum\UserVerifyEnum;
 use app\common\logic\BaseLogic;
 use app\common\model\Demand;
 use app\common\model\DemandAccept;
+use app\common\service\ConfigService;
 use think\facade\Db;
 use app\api\logic\NoticeLogic;
 
@@ -202,7 +203,7 @@ class DemandLogic extends BaseLogic
             // 计算服务费率
             $serviceRate = 0;
             if (!empty($params['is_urgent']) && $params['is_urgent'] == 1) {
-                $serviceRate = 3.00; // 紧急发布收取3%
+                $serviceRate = ConfigService::get('fee', 'urgent_fee_rate', 3);
             }
 
             // 生成需求编号
@@ -274,7 +275,7 @@ class DemandLogic extends BaseLogic
             // 计算服务费率
             $serviceRate = 0;
             if (!empty($params['is_urgent']) && $params['is_urgent'] == 1) {
-                $serviceRate = 3.00; // 紧急发布收取3%
+                $serviceRate = ConfigService::get('fee', 'urgent_fee_rate', 3);
             }
 
             // 更新需求

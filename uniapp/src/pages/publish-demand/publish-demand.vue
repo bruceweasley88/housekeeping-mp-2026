@@ -92,7 +92,7 @@
             <view class="switch-item" @click="isVerified && handleToggleUrgent()">
                 <view class="switch-info">
                     <text class="switch-label">是否紧急发布</text>
-                    <text class="switch-hint">说明：紧急需求将收取3%的服务费，完成后收取。</text>
+                    <text class="switch-hint">说明：紧急需求将收取{{ urgentFeeRate }}%的服务费，完成后收取。</text>
                 </view>
                 <view class="switch-off" :class="{ 'switch-on': formData.is_urgent === 1 }">
                     <view class="switch-off-inner" :class="{ 'switch-on-inner': formData.is_urgent === 1 }"></view>
@@ -145,6 +145,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { onLoad, onShow } from '@dcloudio/uni-app'
 import { useUserStore } from '@/stores/user'
+import { useAppStore } from '@/stores/app'
 import { getDemandCategoryLists, getDemandDetail, publishDemand, editDemand, deleteDemand } from '@/api/demand'
 import { getUserVerifyDetail } from '@/api/userVerify'
 import { getUserAddress } from '@/api/community'
@@ -152,6 +153,12 @@ import PricePopup from '@/components/price-popup/price-popup.vue'
 import ImageUpload from '@/components/image-upload/image-upload.vue'
 
 const userStore = useUserStore()
+const appStore = useAppStore()
+
+const urgentFeeRate = computed(() => {
+    const config = appStore.getFeeConfig
+    return config.urgent_fee_rate ?? 3
+})
 
 // 是否编辑模式
 const isEdit = ref(false)

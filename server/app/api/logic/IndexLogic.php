@@ -145,6 +145,12 @@ class IndexLogic extends BaseLogic
         // 备案信息
         $copyright = ConfigService::get('copyright', 'config', []);
 
+        // 手续费设置
+        $fee = [
+            'urgent_fee_rate' => ConfigService::get('fee', 'urgent_fee_rate', 3),
+            'withdraw_fee_rate' => ConfigService::get('fee', 'withdraw_fee_rate', 3),
+        ];
+
         return [
             'domain' => FileService::getFileUrl(),
             'style' => $style,
@@ -154,6 +160,7 @@ class IndexLogic extends BaseLogic
             'webPage' => $webPage,
             'version'=> config('project.version'),
             'copyright' => $copyright,
+            'fee' => $fee,
         ];
     }
 
