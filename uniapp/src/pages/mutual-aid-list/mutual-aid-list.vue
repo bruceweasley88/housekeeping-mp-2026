@@ -1,5 +1,7 @@
 <template>
     <view class="mutual-aid-list-page">
+        <custom-nav-title title="互助" />
+
         <!-- 统计卡片区域 -->
         <view class="stats-section">
             <view class="stat-card">
@@ -244,7 +246,7 @@ onShow(() => {
 
 <style lang="scss" scoped>
 .mutual-aid-list-page {
-    background-color: #F6F6F6;
+    background: linear-gradient(90deg, #C3FBEF 0%, #C0F6FD 100%);
     min-height: 100vh;
     padding: 20rpx 30rpx;
     padding-bottom: calc(120rpx + env(safe-area-inset-bottom));

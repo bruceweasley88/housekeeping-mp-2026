@@ -59,3 +59,8 @@ export function approveWithdraw(data: { id: number }) {
 export function rejectWithdraw(data: { id: number; remark: string }) {
     return request.post({ url: '/finance.bill/reject', data })
 }
+
+// 用户账单明细
+export function getUserBillLists(params: { user_id: number; type?: number; page_no?: number; page_size?: number }) {
+    return request.get({ url: '/finance.bill/userBills', params })
+}

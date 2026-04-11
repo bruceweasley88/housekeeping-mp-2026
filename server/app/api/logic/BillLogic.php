@@ -4,9 +4,11 @@ namespace app\api\logic;
 
 use app\common\enum\BillEnum;
 use app\common\enum\DemandEnum;
+use app\common\enum\PayEnum;
 use app\common\logic\BaseLogic;
 use app\common\model\Bill;
 use app\common\model\Demand;
+use app\common\model\SettleOrder;
 use think\facade\Db;
 use app\api\logic\NoticeLogic;
 
@@ -16,16 +18,14 @@ use app\api\logic\NoticeLogic;
 class BillLogic extends BaseLogic
 {
     /**
-     * 结算需求
+     * 结算需求（创建结算支付订单）
      * @param int $userId 发布者用户ID
      * @param int $demandId 需求ID
-     * @return bool
+     * @return array|false 返回 [order_id, from] 或 false
      */
-    public static function settle(int $userId, int $demandId): bool
+    public static function settle(int $userId, int $demandId)
     {
         try {
-            Db::startTrans();
-
             // 查询需求
             $demand = Demand::where('id', $demandId)->findOrEmpty();
             if ($demand->isEmpty()) {
@@ -42,52 +42,49 @@ class BillLogic extends BaseLogic
                 throw new \Exception('当前状态不允许结算');
             }
 
-            // 验证是否已结算（检查是否已有账单记录）
-            $existBill = Bill::where('demand_id', $demandId)->findOrEmpty();
-            if (!$existBill->isEmpty()) {
+            // 检查是否已有已支付的结算订单
+            $paidOrder = SettleOrder::where('demand_id', $demandId)
+                ->where('pay_status', PayEnum::ISPAID)
+                ->findOrEmpty();
+            if (!$paidOrder->isEmpty()) {
                 throw new \Exception('该需求已结算');
             }
 
+            // 检查是否已有待支付订单（复用，避免重复创建）
+            $pendingOrder = SettleOrder::where('demand_id', $demandId)
+                ->where('pay_status', PayEnum::UNPAID)
+                ->findOrEmpty();
+            if (!$pendingOrder->isEmpty()) {
+                return [
+                    'order_id' => (int)$pendingOrder->id,
+                    'from' => 'settle'
+                ];
+            }
+
             // 计算金额
-            $originalAmount = $demand->amount;           // 原始金额
-            $serviceRate = $demand->service_rate;        // 服务费率
-            $serviceFee = round($originalAmount * $serviceRate / 100, 2);  // 服务费
-            $settleAmount = round($originalAmount + $serviceFee, 2);       // 结算金额
+            $originalAmount = $demand->amount;
+            $serviceRate = $demand->service_rate;
+            $serviceFee = round($originalAmount * $serviceRate / 100, 2);
+            $orderAmount = round($originalAmount + $serviceFee, 2);
 
-            // 生成账单编号
-            $billNo = Bill::generateBillNo();
-
-            // 创建账单记录
-            Bill::create([
-                'bill_no' => $billNo,
-                'user_id' => $demand->accept_user_id,    // 承接者
+            // 创建结算订单
+            $sn = generate_sn(SettleOrder::class, 'sn');
+            $order = SettleOrder::create([
+                'sn' => $sn,
+                'user_id' => $userId,
                 'demand_id' => $demandId,
-                'demand_no' => $demand->demand_no,
-                'type' => BillEnum::TYPE_INCOME,          // 收入
-                'amount' => $originalAmount,              // 原始金额（承接人实际到账）
-                'status' => BillEnum::STATUS_PENDING,     // 待入账
-                'remark' => '需求结算收入',
-                'settle_time' => time(),
+                'pay_status' => PayEnum::UNPAID,
+                'order_amount' => $orderAmount,
+                'original_amount' => $originalAmount,
+                'service_fee' => $serviceFee,
+                'service_rate' => $serviceRate,
             ]);
 
-            // 更新需求状态为已结算
-            $demand->save([
-                'status' => DemandEnum::STATUS_SETTLED,
-            ]);
-
-            // 发送系统公告：通知承接者
-            NoticeLogic::addNotice(
-                $demand->accept_user_id,
-                '需求已结算到账',
-                '您承接的需求已完成结算，金额 ¥' . number_format($originalAmount, 2) . ' 已入账，可在我的账单查看详情。',
-                'demand',
-                $demand->id
-            );
-
-            Db::commit();
-            return true;
+            return [
+                'order_id' => (int)$order->id,
+                'from' => 'settle'
+            ];
         } catch (\Exception $e) {
-            Db::rollback();
             self::setError($e->getMessage());
             return false;
         }

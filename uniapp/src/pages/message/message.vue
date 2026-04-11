@@ -1,5 +1,7 @@
 <template>
 	<view class="message-page">
+		<custom-nav-title title="消息" />
+
 		<!-- 消息列表 -->
 		<view class="message-list">
 			<!-- 系统公告 -->
@@ -218,7 +220,7 @@ const handleUserClick = (item) => {
 <style lang="scss" scoped>
 .message-page {
 	min-height: 100vh;
-	background-color: #F6F6F6;
+	background: linear-gradient(90deg, #C3FBEF 0%, #C0F6FD 100%);
 }
 
 // 消息列表

@@ -31,16 +31,16 @@ class BillController extends BaseApiController
     }
 
     /**
-     * 结算需求（需登录）
+     * 结算需求（创建结算支付订单）
      */
     public function settle()
     {
         $params = (new BillValidate())->post()->goCheck('settle');
         $result = BillLogic::settle($this->userId, $params['demand_id']);
-        if ($result === true) {
-            return $this->success('结算成功', [], 1, 1);
+        if ($result === false) {
+            return $this->fail(BillLogic::getError());
         }
-        return $this->fail(BillLogic::getError());
+        return $this->data($result);
     }
 
     /**

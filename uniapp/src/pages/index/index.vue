@@ -1,5 +1,7 @@
 <template>
     <view class="index">
+        <custom-nav-title title="首页" />
+
         <!-- 顶部地址栏 -->
         <view class="address-bar" @click="handleSelectCommunity">
             <image class="address-icon" src="/static/index_page/icon_addressb.png" mode="aspectFit" />

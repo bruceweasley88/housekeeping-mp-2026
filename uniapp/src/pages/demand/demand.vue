@@ -203,11 +203,22 @@
             @confirm="handleConfirmAction"
             @cancel="showConfirmModal = false"
         />
+
+        <!-- 支付弹窗 -->
+        <payment
+            v-model:show="payState.showPay"
+            v-model:show-check="payState.showCheck"
+            :order-id="payState.orderId"
+            :from="payState.from"
+            :redirect="payState.redirect"
+            @success="handlePaySuccess"
+            @fail="handlePayFail"
+        />
     </view>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, reactive } from 'vue'
 import { onLoad, onShow, onShareAppMessage } from '@dcloudio/uni-app'
 import {
     getDemandDetail,
@@ -232,6 +243,15 @@ const showAdjustPopup = ref(false)
 const adjustAmount = ref('')
 const showConfirmModal = ref(false)
 const confirmActionType = ref<'accept' | 'cancelAccept' | 'finish' | null>(null)
+
+// 支付状态
+const payState = reactive({
+    orderId: 0,
+    from: '',
+    showPay: false,
+    showCheck: false,
+    redirect: ''
+})
 
 // ============ 计算属性：角色与状态 ============
 const userRole = computed(() => {
@@ -555,14 +575,28 @@ const handleSettle = async () => {
     if (submitting.value) return
     submitting.value = true
     try {
-        await settleDemand(demandId.value)
-        uni.$u.toast('结算成功')
-        loadDetail()
+        const data = await settleDemand(demandId.value)
+        payState.orderId = data.order_id
+        payState.from = data.from
+        payState.showPay = true
     } catch (e) {
-        console.error('结算失败', e)
+        console.error('创建结算订单失败', e)
     } finally {
         submitting.value = false
     }
+}
+
+const handlePaySuccess = () => {
+    payState.showPay = false
+    payState.showCheck = false
+    uni.$u.toast('结算成功')
+    loadDetail()
+}
+
+const handlePayFail = () => {
+    payState.showPay = false
+    payState.showCheck = false
+    uni.$u.toast('支付失败')
 }
 
 const handleContact = () => {

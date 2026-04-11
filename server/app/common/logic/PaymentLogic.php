@@ -19,6 +19,7 @@ use app\common\enum\PayEnum;
 use app\common\enum\YesNoEnum;
 use app\common\model\pay\PayWay;
 use app\common\model\recharge\RechargeOrder;
+use app\common\model\SettleOrder;
 use app\common\model\user\User;
 use app\common\service\pay\AliPayService;
 use app\common\service\pay\WeChatPayService;
@@ -48,6 +49,10 @@ class PaymentLogic extends BaseLogic
                 // 充值
                 $order = RechargeOrder::findOrEmpty($params['order_id'])->toArray();
             }
+            if ($params['from'] == 'settle') {
+                // 需求结算
+                $order = SettleOrder::findOrEmpty($params['order_id'])->toArray();
+            }
 
             if (empty($order)) {
                 throw new \Exception('待支付订单不存在');
@@ -73,8 +78,8 @@ class PaymentLogic extends BaseLogic
                     $user_money = User::where(['id' => $userId])->value('user_money');
                     $item['extra'] = '可用余额:' . $user_money;
                 }
-                // 充值时去除余额支付
-                if ($params['from'] == 'recharge' && $item['pay_way'] == PayEnum::BALANCE_PAY) {
+                // 充值/结算时去除余额支付
+                if (($params['from'] == 'recharge' || $params['from'] == 'settle') && $item['pay_way'] == PayEnum::BALANCE_PAY) {
                     unset($pay_way[$k]);
                 }
             }
@@ -106,6 +111,19 @@ class PaymentLogic extends BaseLogic
             switch ($params['from']) {
                 case 'recharge':
                     $order = RechargeOrder::where(['user_id' => $params['user_id'], 'id' => $params['order_id']])
+                        ->findOrEmpty();
+                    $payTime = empty($order['pay_time']) ? '' : date('Y-m-d H:i:s', $order['pay_time']);
+                    $orderInfo = [
+                        'order_id' => $order['id'],
+                        'order_sn' => $order['sn'],
+                        'order_amount' => $order['order_amount'],
+                        'pay_way' => PayEnum::getPayDesc($order['pay_way']),
+                        'pay_status' => PayEnum::getPayStatusDesc($order['pay_status']),
+                        'pay_time' => $payTime,
+                    ];
+                    break;
+                case 'settle':
+                    $order = SettleOrder::where(['user_id' => $params['user_id'], 'id' => $params['order_id']])
                         ->findOrEmpty();
                     $payTime = empty($order['pay_time']) ? '' : date('Y-m-d H:i:s', $order['pay_time']);
                     $orderInfo = [
@@ -152,6 +170,12 @@ class PaymentLogic extends BaseLogic
                         throw new \Exception('充值订单不存在');
                     }
                     break;
+                case 'settle':
+                    $order = SettleOrder::findOrEmpty($params['order_id']);
+                    if ($order->isEmpty()) {
+                        throw new \Exception('结算订单不存在');
+                    }
+                    break;
             }
 
             if ($order['pay_status'] == PayEnum::ISPAID) {
@@ -188,6 +212,9 @@ class PaymentLogic extends BaseLogic
         switch ($from) {
             case 'recharge':
                 RechargeOrder::update(['pay_way' => $payWay, 'pay_sn' => $paySn], ['id' => $order['id']]);
+                break;
+            case 'settle':
+                SettleOrder::update(['pay_way' => $payWay, 'pay_sn' => $paySn], ['id' => $order['id']]);
                 break;
         }
 

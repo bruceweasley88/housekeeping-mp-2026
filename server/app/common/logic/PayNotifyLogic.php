@@ -16,8 +16,14 @@ namespace app\common\logic;
 
 use app\common\enum\PayEnum;
 use app\common\enum\user\AccountLogEnum;
+use app\common\enum\BillEnum;
+use app\common\enum\DemandEnum;
 use app\common\model\recharge\RechargeOrder;
 use app\common\model\user\User;
+use app\common\model\Bill;
+use app\common\model\Demand;
+use app\common\model\SettleOrder;
+use app\api\logic\NoticeLogic;
 use think\facade\Db;
 use think\facade\Log;
 
@@ -82,6 +88,63 @@ class PayNotifyLogic extends BaseLogic
         $order->pay_status = PayEnum::ISPAID;
         $order->pay_time = time();
         $order->save();
+    }
+
+
+    /**
+     * @notes 需求结算支付回调
+     * @param $orderSn
+     * @param array $extra
+     */
+    public static function settle($orderSn, array $extra = [])
+    {
+        $order = SettleOrder::where('sn', $orderSn)->findOrEmpty();
+        if ($order->isEmpty()) {
+            throw new \Exception('结算订单不存在');
+        }
+
+        // 查询需求
+        $demand = Demand::where('id', $order->demand_id)->findOrEmpty();
+        if ($demand->isEmpty()) {
+            throw new \Exception('需求不存在');
+        }
+
+        // 幂等检查：是否已有账单（防止重复回调）
+        $existBill = Bill::where('demand_id', $order->demand_id)->findOrEmpty();
+        if (!$existBill->isEmpty()) {
+            return;
+        }
+
+        // 创建账单记录（给承接者入账，待入账状态）
+        Bill::create([
+            'bill_no' => Bill::generateBillNo(),
+            'user_id' => $demand->accept_user_id,
+            'demand_id' => $demand->id,
+            'demand_no' => $demand->demand_no,
+            'type' => BillEnum::TYPE_INCOME,
+            'amount' => $order->original_amount,
+            'status' => BillEnum::STATUS_PENDING,
+            'remark' => '需求结算收入',
+            'settle_time' => time(),
+        ]);
+
+        // 更新需求状态为已结算
+        $demand->save(['status' => DemandEnum::STATUS_SETTLED]);
+
+        // 更新结算订单状态为已支付
+        $order->transaction_id = $extra['transaction_id'] ?? '';
+        $order->pay_status = PayEnum::ISPAID;
+        $order->pay_time = time();
+        $order->save();
+
+        // 发送系统公告：通知承接者
+        NoticeLogic::addNotice(
+            $demand->accept_user_id,
+            '需求已结算到账',
+            '您承接的需求已完成结算，金额 ¥' . number_format($order->original_amount, 2) . ' 已入账，可在我的账单查看详情。',
+            'demand',
+            $demand->id
+        );
     }
 
 

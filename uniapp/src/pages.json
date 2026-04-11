@@ -3,14 +3,23 @@
         {
             "path": "pages/index/index",
             "style": {
-                "navigationBarTitleText": "首页",
-                "navigationBarBackgroundColor": "#FFFFFF"
+                // #ifndef H5
+                "navigationStyle": "custom",
+                // #endif
+                // #ifdef H5
+                "navigationBarTitleText": "首页"
+                // #endif
             }
         },
         {
             "path": "pages/message/message",
             "style": {
+                // #ifndef H5
+                "navigationStyle": "custom",
+                // #endif
+                // #ifdef H5
                 "navigationBarTitleText": "消息"
+                // #endif
             },
             "meta": {
                 "auth": true
@@ -225,7 +234,12 @@
         {
             "path": "pages/mutual-aid-list/mutual-aid-list",
             "style": {
+                // #ifndef H5
+                "navigationStyle": "custom",
+                // #endif
+                // #ifdef H5
                 "navigationBarTitleText": "互助"
+                // #endif
             },
             "meta": {
                 "auth": true
