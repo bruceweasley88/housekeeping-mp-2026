@@ -25,7 +25,7 @@ class DemandValidate extends BaseValidate
         'community_id' => 'integer',
         'address' => 'require|max:255',
         'contact_name' => 'require|max:50',
-        'contact_phone' => 'require|mobile',
+        'contact_phone' => 'mobile',
         'show_phone' => 'in:0,1',
         'is_urgent' => 'in:0,1',
         'status' => 'integer',

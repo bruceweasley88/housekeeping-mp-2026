@@ -62,6 +62,7 @@
                                 shape="circle"
                                 type="primary"
                                 :loading="isLock"
+                                :customStyle="{ background: '#00B6B4', borderColor: '#00B6B4', color: '#fff' }"
                             >
                                 立即支付
                             </u-button>

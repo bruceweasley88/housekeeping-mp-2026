@@ -55,6 +55,19 @@ class BillLogic extends BaseLogic
                 ->where('pay_status', PayEnum::UNPAID)
                 ->findOrEmpty();
             if (!$pendingOrder->isEmpty()) {
+                // 重新计算金额，若价格有变动则更新订单
+                $originalAmount = $demand->amount;
+                $serviceRate = $demand->service_rate;
+                $serviceFee = round($originalAmount * $serviceRate / 100, 2);
+                $orderAmount = round($originalAmount + $serviceFee, 2);
+                if ($pendingOrder->original_amount != $originalAmount || $pendingOrder->service_rate != $serviceRate) {
+                    $pendingOrder->save([
+                        'original_amount' => $originalAmount,
+                        'service_fee' => $serviceFee,
+                        'service_rate' => $serviceRate,
+                        'order_amount' => $orderAmount,
+                    ]);
+                }
                 return [
                     'order_id' => (int)$pendingOrder->id,
                     'from' => 'settle'
