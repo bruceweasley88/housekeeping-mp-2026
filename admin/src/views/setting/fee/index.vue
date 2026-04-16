@@ -53,7 +53,7 @@
                 </el-form-item>
             </el-card>
         </el-form>
-        <footer-btns v-perms="['setting.fee_settings/setConfig']">
+        <footer-btns>
             <el-button type="primary" @click="handleSubmit">保存</el-button>
         </footer-btns>
     </div>
