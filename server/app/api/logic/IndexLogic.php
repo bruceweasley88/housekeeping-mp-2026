@@ -149,6 +149,7 @@ class IndexLogic extends BaseLogic
         $fee = [
             'urgent_fee_rate' => ConfigService::get('fee', 'urgent_fee_rate', 3),
             'withdraw_fee_rate' => ConfigService::get('fee', 'withdraw_fee_rate', 3),
+            'commission_rate' => ConfigService::get('fee', 'commission_rate', 0),
         ];
 
         return [

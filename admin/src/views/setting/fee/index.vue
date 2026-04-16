@@ -36,6 +36,23 @@
                     </el-form-item>
                 </el-card>
             </div>
+            <el-card shadow="never" class="!border-none mt-4">
+                <div class="text-xl font-medium mb-[20px]">平台佣金比例</div>
+                <el-form-item label="费率" prop="commission_rate">
+                    <div class="w-60">
+                        <el-input-number
+                            v-model="formData.commission_rate"
+                            :min="0"
+                            :max="100"
+                            :precision="2"
+                            :step="0.5"
+                            controls-position="right"
+                        />
+                        <span class="ml-2 text-gray-500">%</span>
+                    </div>
+                </el-form-item>
+            </el-card>
+            </div>
         </el-form>
         <footer-btns v-perms="['setting.fee_settings/setConfig']">
             <el-button type="primary" @click="handleSubmit">保存</el-button>
@@ -52,6 +69,7 @@ const formRef = ref<FormInstance>()
 const formData = reactive({
     urgent_fee_rate: 3,
     withdraw_fee_rate: 3,
+    commission_rate: 0,
 })
 
 const rules = {
@@ -61,12 +79,16 @@ const rules = {
     withdraw_fee_rate: [
         { required: true, message: '请输入提现手续费率', trigger: 'blur' },
     ],
+    commission_rate: [
+        { required: true, message: '请输入平台佣金比例', trigger: 'blur' },
+    ],
 }
 
 const getData = async () => {
     const data = await getFeeSettings()
     formData.urgent_fee_rate = data.urgent_fee_rate
     formData.withdraw_fee_rate = data.withdraw_fee_rate
+    formData.commission_rate = data.commission_rate
 }
 
 const handleSubmit = async () => {

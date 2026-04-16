@@ -14,6 +14,7 @@ class FeeSettingsValidate extends BaseValidate
     protected $rule = [
         'urgent_fee_rate' => 'require|float|egt:0|elt:100',
         'withdraw_fee_rate' => 'require|float|egt:0|elt:100',
+        'commission_rate' => 'require|float|egt:0|elt:100',
     ];
 
     protected $message = [
@@ -26,10 +27,15 @@ class FeeSettingsValidate extends BaseValidate
         'withdraw_fee_rate.float' => '提现手续费率须为数字',
         'withdraw_fee_rate.egt' => '提现手续费率不能小于0',
         'withdraw_fee_rate.elt' => '提现手续费率不能超过100',
+
+        'commission_rate.require' => '请输入平台佣金比例',
+        'commission_rate.float' => '平台佣金比例须为数字',
+        'commission_rate.egt' => '平台佣金比例不能小于0',
+        'commission_rate.elt' => '平台佣金比例不能超过100',
     ];
 
     public function sceneSetConfig()
     {
-        return $this->only(['urgent_fee_rate', 'withdraw_fee_rate']);
+        return $this->only(['urgent_fee_rate', 'withdraw_fee_rate', 'commission_rate']);
     }
 }

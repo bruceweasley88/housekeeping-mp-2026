@@ -20,6 +20,7 @@ class FeeSettingsLogic extends BaseLogic
         return [
             'urgent_fee_rate' => ConfigService::get('fee', 'urgent_fee_rate', 3),
             'withdraw_fee_rate' => ConfigService::get('fee', 'withdraw_fee_rate', 3),
+            'commission_rate' => ConfigService::get('fee', 'commission_rate', 0),
         ];
     }
 
@@ -30,5 +31,6 @@ class FeeSettingsLogic extends BaseLogic
     {
         ConfigService::set('fee', 'urgent_fee_rate', $params['urgent_fee_rate']);
         ConfigService::set('fee', 'withdraw_fee_rate', $params['withdraw_fee_rate']);
+        ConfigService::set('fee', 'commission_rate', $params['commission_rate']);
     }
 }

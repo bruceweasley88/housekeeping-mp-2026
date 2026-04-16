@@ -23,6 +23,7 @@ use app\common\model\user\User;
 use app\common\model\Bill;
 use app\common\model\Demand;
 use app\common\model\SettleOrder;
+use app\common\service\ConfigService;
 use app\api\logic\NoticeLogic;
 use think\facade\Db;
 use think\facade\Log;
@@ -115,6 +116,10 @@ class PayNotifyLogic extends BaseLogic
             return;
         }
 
+        // 计算扣除平台佣金后的入账金额
+        $commissionRate = ConfigService::get('fee', 'commission_rate', 0);
+        $settleAmount = round($order->original_amount * (1 - $commissionRate / 100), 2);
+
         // 创建账单记录（给承接者入账，待入账状态）
         Bill::create([
             'bill_no' => Bill::generateBillNo(),
@@ -122,7 +127,7 @@ class PayNotifyLogic extends BaseLogic
             'demand_id' => $demand->id,
             'demand_no' => $demand->demand_no,
             'type' => BillEnum::TYPE_INCOME,
-            'amount' => $order->original_amount,
+            'amount' => $settleAmount,
             'status' => BillEnum::STATUS_PENDING,
             'remark' => '需求结算收入',
             'settle_time' => time(),
@@ -141,7 +146,7 @@ class PayNotifyLogic extends BaseLogic
         NoticeLogic::addNotice(
             $demand->accept_user_id,
             '需求已结算到账',
-            '您承接的需求已完成结算，金额 ¥' . number_format($order->original_amount, 2) . ' 已入账，可在我的账单查看详情。',
+            '您承接的需求已完成结算，金额 ¥' . number_format($settleAmount, 2) . ' 已入账，可在我的账单查看详情。',
             'demand',
             $demand->id
         );
