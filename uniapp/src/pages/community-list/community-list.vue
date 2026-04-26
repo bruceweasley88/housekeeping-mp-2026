@@ -205,7 +205,7 @@ const handleConfirm = () => {
 // 跳转新增小区页面
 const handleAddCommunity = () => {
     uni.navigateTo({
-        url: '/pages/add-community/add-community'
+        url: '/packages/pages/add-community/add-community'
     })
 }
 
@@ -391,7 +391,7 @@ onMounted(async () => {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 30rpx 36rpx;
+    padding: 30rpx 36rpx 50rpx;
 
     .add-text {
         font-size: 28rpx;

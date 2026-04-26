@@ -65,7 +65,7 @@
                 :key="item.id"
                 :is-urgent="item.is_urgent"
                 :title="item.title"
-                :location="item.address"
+                :location="item.community_name"
                 :description="item.description"
                 :price-type="item.price_type"
                 :amount="item.amount"
@@ -90,6 +90,23 @@
         <!-- 登录弹窗 -->
         <login-popup v-model:show="showLogin" @confirm="handleLoginConfirm" @cancel="handleLoginCancel" />
 
+        <!-- 用户须知弹窗 -->
+        <u-popup v-model="showNotice" mode="center" border-radius="29" :mask-close-able="false" :closeable="false">
+            <view class="notice-popup">
+                <text class="notice-title">用户须知</text>
+                <view class="notice-divider" />
+                <view class="notice-rules">
+                    <view class="notice-rule-item" v-for="(rule, index) in noticeRules" :key="index">
+                        <text class="notice-rule-number">{{ index + 1 }}</text>
+                        <text class="notice-rule-text">{{ rule }}</text>
+                    </view>
+                </view>
+                <view class="notice-confirm-btn" @click="handleNoticeConfirm">
+                    <text class="notice-confirm-text">我知道了</text>
+                </view>
+            </view>
+        </u-popup>
+
         <!-- 测试登录按钮（仅开发者工具显示） -->
         <view v-if="isDevTools" class="test-login-btn" @click="handleTestLogin">测试登录</view>
 
@@ -104,7 +121,7 @@ import { getDemandCategoryLists, getDemandLists } from '@/api/demand'
 import { login } from '@/api/account'
 import { autoSettleBill } from '@/api/bill'
 import { onLoad, onShow, onReady } from "@dcloudio/uni-app";
-import { computed, reactive, ref, watch, onMounted, onUnmounted } from 'vue'
+import { computed, reactive, ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import LSwiper from '@/components/l-swiper/l-swiper.vue'
 import { useUserStore } from '@/stores/user'
 
@@ -114,6 +131,8 @@ import MpPrivacyPopup from './component/mp-privacy-popup.vue'
 
 import DemandCard from '@/components/demand-card/demand-card.vue'
 import LoginPopup from '@/components/login-popup/login-popup.vue'
+import cache from '@/utils/cache'
+import { NOTICE_READ } from '@/enums/constantEnums'
 
 const userStore = useUserStore()
 
@@ -247,6 +266,12 @@ onLoad(() => {
     const systemInfo = uni.getSystemInfoSync()
     isDevTools.value = systemInfo.platform === 'devtools'
     loadPageData()
+    // 已登录用户打开首页时检查须知弹窗
+    nextTick(() => {
+        if (userStore.isLogin) {
+            checkShowNotice()
+        }
+    })
 })
 
 // 每次显示页面时刷新数据
@@ -258,6 +283,7 @@ onShow(() => {
 onMounted(() => {
     uni.$on('loginSuccess', () => {
         loadPageData()
+        checkShowNotice()
     })
 })
 
@@ -275,6 +301,35 @@ const handleSelectCommunity = () => {
 
 // 登录弹窗
 const showLogin = ref(false)
+
+// 用户须知弹窗
+const showNotice = ref(false)
+const noticeRules = [
+    '平台仅限于服务小区业主/租户在家庭日常生活方面的互帮互助；',
+    '小区业主/租户只能在所在小区发布/承接任务，跨小区则无法发布/承接；',
+    '如需跨小区发布/承接任务，则需要进行更换小区且进行业主/租户认证。'
+]
+
+const checkShowNotice = async () => {
+    if (!userStore.isLogin) return
+    if (!userStore.userInfo?.id) {
+        await userStore.getUser()
+    }
+    const userId = userStore.userInfo?.id
+    if (!userId) return
+    const hasRead = cache.get(`${NOTICE_READ}_${userId}`)
+    if (!hasRead) {
+        showNotice.value = true
+    }
+}
+
+const handleNoticeConfirm = () => {
+    const userId = userStore.userInfo?.id
+    if (userId) {
+        cache.set(`${NOTICE_READ}_${userId}`, true)
+    }
+    showNotice.value = false
+}
 
 // 监听 needShowLoginPopup 状态，控制登录弹窗显示
 watch(
@@ -537,5 +592,79 @@ const handleTakeTask = (item: any) => {
     padding: 16rpx 24rpx;
     border-radius: 30rpx;
     z-index: 999;
+}
+
+// 用户须知弹窗
+.notice-popup {
+    width: 600rpx;
+    padding: 50rpx 40rpx 40rpx;
+    background: #fff;
+    border-radius: 29rpx;
+}
+
+.notice-title {
+    display: block;
+    text-align: center;
+    font-size: 36rpx;
+    font-weight: 600;
+    color: #222929;
+}
+
+.notice-divider {
+    width: 60rpx;
+    height: 6rpx;
+    background: #00B6B4;
+    border-radius: 3rpx;
+    margin: 20rpx auto 36rpx;
+}
+
+.notice-rules {
+    margin-bottom: 44rpx;
+}
+
+.notice-rule-item {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 28rpx;
+
+    &:last-child {
+        margin-bottom: 0;
+    }
+}
+
+.notice-rule-number {
+    width: 36rpx;
+    height: 36rpx;
+    line-height: 36rpx;
+    text-align: center;
+    background: #00B6B4;
+    color: #fff;
+    font-size: 22rpx;
+    border-radius: 50%;
+    margin-right: 16rpx;
+    flex-shrink: 0;
+    margin-top: 4rpx;
+}
+
+.notice-rule-text {
+    flex: 1;
+    font-size: 26rpx;
+    color: #616B6B;
+    line-height: 40rpx;
+}
+
+.notice-confirm-btn {
+    height: 88rpx;
+    background: #00B6B4;
+    border-radius: 44rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.notice-confirm-text {
+    font-size: 32rpx;
+    font-weight: 500;
+    color: #fff;
 }
 </style>

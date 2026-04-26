@@ -721,7 +721,7 @@ onMounted(() => {
 
 .switch-hint {
     font-size: 24rpx;
-    color: #9CA6A6;
+    color: #F04530;
     margin-top: 2rpx;
 }
 

@@ -9,3 +9,6 @@ export const HISTORY = 'history'
 export const BACK_URL = 'back_url'
 
 export const PAY_STATUS_EVENT = 'event:payStatus'
+
+// 用户须知已读标记
+export const NOTICE_READ = 'notice_read'

@@ -5,7 +5,7 @@
             <template v-if="loginState === 'loading'">
                 <view class="loading-state">
                     <u-loading mode="circle" size="80"></u-loading>
-                    <text class="loading-text">正在登录...</text>
+                    <text class="loading-text">{{ isNewUser ? '正在登录...' : '社区邻居生活互助平台' }}</text>
                 </view>
             </template>
 
@@ -144,12 +144,14 @@ const initLogin = async () => {
         isNewUser.value = data.is_new_user !== 0
 
         if (!isNewUser.value) {
-            // 已注册用户，直接登录
-            userStore.login(temToken.value)
-            emit('success', { token: temToken.value })
-            showPopup.value = false
-            // 通知首页刷新数据
-            uni.$emit('loginSuccess')
+            // 已注册用户，延迟后直接登录
+            setTimeout(() => {
+                userStore.login(temToken.value)
+                emit('success', { token: temToken.value })
+                showPopup.value = false
+                // 通知首页刷新数据
+                uni.$emit('loginSuccess')
+            }, 1500)
         } else {
             // 新用户，显示表单
             loginState.value = 'form'
