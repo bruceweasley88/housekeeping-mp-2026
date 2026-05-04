@@ -10,6 +10,16 @@
                         @keyup.enter="resetPage"
                     />
                 </el-form-item>
+                <el-form-item class="w-[280px]" label="认证小区">
+                    <el-select v-model="queryParams.community_id" clearable placeholder="请选择小区">
+                        <el-option
+                            v-for="item in communityList"
+                            :key="item.id"
+                            :label="item.name"
+                            :value="item.id"
+                        />
+                    </el-select>
+                </el-form-item>
                 <el-form-item class="w-[280px]" label="状态">
                     <el-select v-model="queryParams.status" clearable placeholder="请选择状态">
                         <el-option label="待审核" :value="0" />
@@ -143,15 +153,25 @@
 </template>
 <script lang="ts" setup name="userVerifyLists">
 import { getUserVerifyLists, userVerifyAudit } from '@/api/user_verify'
+import { getCommunityLists } from '@/api/community'
 import { usePaging } from '@/hooks/usePaging'
 import feedback from '@/utils/feedback'
 
 const queryParams = reactive({
     keyword: '',
     status: '' as string | number,
+    community_id: '' as string | number,
     start_time: '',
     end_time: ''
 })
+
+// 小区列表
+const communityList = ref<any[]>([])
+const fetchCommunityList = async () => {
+    const res: any = await getCommunityLists({ page_no: 1, page_size: 500 })
+    communityList.value = res.lists || []
+}
+fetchCommunityList()
 
 const { pager, getLists, resetPage, resetParams } = usePaging({
     fetchFun: getUserVerifyLists,

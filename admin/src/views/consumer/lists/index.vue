@@ -10,6 +10,16 @@
                         @keyup.enter="resetPage"
                     />
                 </el-form-item>
+                <el-form-item class="w-[280px]" label="所属小区">
+                    <el-select v-model="queryParams.community_id" clearable placeholder="请选择小区">
+                        <el-option
+                            v-for="item in communityList"
+                            :key="item.id"
+                            :label="item.name"
+                            :value="item.id"
+                        />
+                    </el-select>
+                </el-form-item>
                 <el-form-item label="注册时间">
                     <daterange-picker
                         v-model:startTime="queryParams.create_time_start"
@@ -126,6 +136,7 @@
 </template>
 <script lang="ts" setup name="consumerLists">
 import { getUserList } from '@/api/consumer'
+import { getCommunityLists } from '@/api/community'
 import { getUserBillLists } from '@/api/finance'
 import { ClientMap } from '@/enums/appEnums'
 import { usePaging } from '@/hooks/usePaging'
@@ -134,9 +145,18 @@ import { getRoutePath } from '@/router'
 const queryParams = reactive({
     keyword: '',
     channel: '',
+    community_id: '' as string | number,
     create_time_start: '',
     create_time_end: ''
 })
+
+// 小区列表
+const communityList = ref<any[]>([])
+const fetchCommunityList = async () => {
+    const res: any = await getCommunityLists({ page_no: 1, page_size: 500 })
+    communityList.value = res.lists || []
+}
+fetchCommunityList()
 
 const { pager, getLists, resetPage, resetParams } = usePaging({
     fetchFun: getUserList,

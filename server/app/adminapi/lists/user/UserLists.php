@@ -35,7 +35,7 @@ class UserLists extends BaseAdminDataLists implements ListsExcelInterface
      */
     public function setSearch(): array
     {
-        $allowSearch = ['keyword', 'channel', 'create_time_start', 'create_time_end'];
+        $allowSearch = ['keyword', 'channel', 'community_id', 'create_time_start', 'create_time_end'];
         return array_intersect(array_keys($this->params), $allowSearch);
     }
 

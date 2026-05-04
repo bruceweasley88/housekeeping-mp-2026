@@ -78,6 +78,20 @@ class User extends BaseModel
 
 
     /**
+     * @notes 搜索器-小区ID
+     * @param $query
+     * @param $value
+     * @param $data
+     */
+    public function searchCommunityIdAttr($query, $value, $data)
+    {
+        if ($value) {
+            $query->where('community_id', '=', $value);
+        }
+    }
+
+
+    /**
      * @notes 搜索器-注册时间
      * @param $query
      * @param $value
