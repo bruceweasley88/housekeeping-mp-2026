@@ -64,3 +64,18 @@ export function rejectWithdraw(data: { id: number; remark: string }) {
 export function getUserBillLists(params: { user_id: number; type?: number; page_no?: number; page_size?: number }) {
     return request.get({ url: '/finance.bill/userBills', params })
 }
+
+// 平台提现统计
+export function getPlatformStats(params?: any) {
+    return request.get({ url: '/finance.bill/platformStats', params })
+}
+
+// 用户提现统计
+export function getUserStats(params?: any) {
+    return request.get({ url: '/finance.bill/userStats', params })
+}
+
+// 用户提现统计明细
+export function getUserStatsDetail(params: { user_id: number; period?: string }) {
+    return request.get({ url: '/finance.bill/userStatsDetail', params })
+}
