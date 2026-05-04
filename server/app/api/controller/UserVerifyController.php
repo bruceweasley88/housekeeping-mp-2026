@@ -28,7 +28,9 @@ class UserVerifyController extends BaseApiController
      */
     public function detail()
     {
-        $result = UserVerifyLogic::detail($this->userId);
+        $params = $this->request->get();
+        $communityId = intval($params['community_id'] ?? 0);
+        $result = UserVerifyLogic::detail($this->userId, $communityId);
         return $this->data($result);
     }
 

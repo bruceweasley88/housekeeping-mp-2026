@@ -118,6 +118,7 @@
 import { getPosterLists } from '@/api/shop'
 import { getUserAddress } from '@/api/community'
 import { getDemandCategoryLists, getDemandLists } from '@/api/demand'
+import { getUserVerifyDetail } from '@/api/userVerify'
 import { login } from '@/api/account'
 import { autoSettleBill } from '@/api/bill'
 import { onLoad, onShow, onReady } from "@dcloudio/uni-app";
@@ -343,7 +344,7 @@ watch(
     { immediate: true }
 )
 
-const handlePublish = () => {
+const handlePublish = async () => {
     // 已登录但未选择小区时提示
     if (userStore.isLogin && !communityId.value) {
         uni.showToast({
@@ -351,6 +352,29 @@ const handlePublish = () => {
             icon: 'none'
         })
         return
+    }
+    // 已登录时检查当前小区认证状态
+    if (userStore.isLogin && communityId.value) {
+        try {
+            const res = await getUserVerifyDetail({ community_id: communityId.value })
+            if (!res || res.status !== 1) {
+                uni.showModal({
+                    title: '提示',
+                    content: '您还未完成当前小区的业主认证，是否前往认证？',
+                    confirmText: '去认证',
+                    success: (modalRes) => {
+                        if (modalRes.confirm) {
+                            uni.navigateTo({
+                                url: '/packages/pages/owner-verify/owner-verify'
+                            })
+                        }
+                    }
+                })
+                return
+            }
+        } catch (e) {
+            // 查询失败时仍允许跳转，由发布页自行检查
+        }
     }
     uni.navigateTo({
         url: '/pages/publish-demand/publish-demand'

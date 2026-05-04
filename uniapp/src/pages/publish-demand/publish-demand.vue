@@ -2,7 +2,7 @@
     <view class="page">
         <!-- 顶部提示条 -->
         <view class="tip-bar" v-if="!isVerified">
-            <text class="tip-text">您还未进行业主验证，业主与住户才能发布！</text>
+            <text class="tip-text">您还未完成当前小区的业主验证，业主与住户才能发布！</text>
             <view class="cert-btn" @click="handleGoVerify">
                 <text class="cert-btn-text">去认证</text>
             </view>
@@ -219,7 +219,15 @@ const fetchCategories = async () => {
 // 检查认证状态
 const checkVerifyStatus = async () => {
     try {
-        const data = await getUserVerifyDetail()
+        // 先获取地址拿到当前小区ID
+        const addressData = await getUserAddress()
+        const currentCommunityId = addressData?.community_id || 0
+        if (currentCommunityId) {
+            formData.value.community_id = currentCommunityId
+        }
+
+        // 带上 community_id 检查认证状态
+        const data = await getUserVerifyDetail({ community_id: currentCommunityId || undefined })
         isVerified.value = data && data.status === 1
     } catch (e) {
         isVerified.value = false

@@ -34,6 +34,7 @@
                 <el-table-column label="ID" prop="id" min-width="60" />
                 <el-table-column label="用户昵称" prop="nickname" min-width="100" show-overflow-tooltip />
                 <el-table-column label="手机号" prop="mobile" min-width="120" />
+                <el-table-column label="认证小区" prop="community_name" min-width="120" show-overflow-tooltip />
                 <el-table-column label="身份证正面" min-width="100">
                     <template #default="{ row }">
                         <image-contain

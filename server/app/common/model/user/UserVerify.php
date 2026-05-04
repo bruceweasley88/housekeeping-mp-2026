@@ -4,6 +4,7 @@ namespace app\common\model\user;
 
 use app\common\enum\UserVerifyEnum;
 use app\common\model\BaseModel;
+use app\common\model\Community;
 use app\common\service\FileService;
 use think\model\concern\SoftDelete;
 
@@ -17,6 +18,25 @@ class UserVerify extends BaseModel
     protected $deleteTime = 'delete_time';
 
     protected $name = 'user_verify';
+
+    /**
+     * 关联小区
+     */
+    public function community()
+    {
+        return $this->hasOne(Community::class, 'id', 'community_id')
+            ->field('id,name,address');
+    }
+
+    /**
+     * 搜索器-小区ID
+     */
+    public function searchCommunityIdAttr($query, $value, $data)
+    {
+        if ($value) {
+            $query->where('community_id', '=', $value);
+        }
+    }
 
     /**
      * 搜索器-用户ID

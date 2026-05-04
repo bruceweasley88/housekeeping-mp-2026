@@ -18,7 +18,7 @@ class UserVerifyLists extends BaseAdminDataLists implements ListsSearchInterface
     public function setSearch(): array
     {
         return [
-            '=' => ['uv.status'],
+            '=' => ['uv.status', 'uv.community_id'],
             '%like%' => ['u.nickname', 'u.mobile'],
             'between_time' => 'uv.create_time',
         ];
@@ -45,9 +45,10 @@ class UserVerifyLists extends BaseAdminDataLists implements ListsSearchInterface
      */
     public function lists(): array
     {
-        $field = 'uv.id,uv.user_id,u.nickname,u.mobile,u.avatar,uv.idcard_front,uv.idcard_back,uv.verify_materials,uv.status,uv.reject_reason,uv.create_time';
+        $field = 'uv.id,uv.user_id,u.nickname,u.mobile,u.avatar,uv.community_id,uv.idcard_front,uv.idcard_back,uv.verify_materials,uv.status,uv.reject_reason,uv.create_time,c.name as community_name';
         $lists = UserVerify::alias('uv')
             ->join('user u', 'u.id = uv.user_id')
+            ->leftJoin('community c', 'c.id = uv.community_id')
             ->field($field)
             ->where($this->searchWhere)
             ->append(['status_desc'])
@@ -71,6 +72,7 @@ class UserVerifyLists extends BaseAdminDataLists implements ListsSearchInterface
     {
         return UserVerify::alias('uv')
             ->join('user u', 'u.id = uv.user_id')
+            ->leftJoin('community c', 'c.id = uv.community_id')
             ->where($this->searchWhere)
             ->count();
     }

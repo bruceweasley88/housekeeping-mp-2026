@@ -5,6 +5,20 @@
             <text class="status-text">{{ statusText }}</text>
         </view>
 
+        <!-- 小区选择 -->
+        <view class="community-section">
+            <text class="section-title">认证小区</text>
+            <view v-if="status === null || status === 2" class="community-picker" @click="handleSelectCommunity">
+                <text :class="communityName ? 'community-name' : 'community-placeholder'">
+                    {{ communityName || '请选择要认证的小区' }}
+                </text>
+                <text class="picker-arrow">></text>
+            </view>
+            <view v-else class="community-readonly">
+                <text class="community-name">{{ communityName || '未知小区' }}</text>
+            </view>
+        </view>
+
         <!-- 实名认证 标题 -->
         <text class="section-title">实名认证</text>
 
@@ -40,7 +54,7 @@
         />
 
         <!-- 说明文字 -->
-        <text class="description">业主认证通过后，才能发布和承接需求</text>
+        <text class="description">业主认证通过后，才能在该小区发布和承接需求</text>
 
         <!-- 立即认证按钮 -->
         <view
@@ -58,14 +72,19 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { onLoad } from '@dcloudio/uni-app'
+import { onLoad, onShow } from '@dcloudio/uni-app'
 import { submitUserVerify, getUserVerifyDetail } from '@/api/userVerify'
+import { getUserAddress } from '@/api/community'
 import { uploadImage } from '@/api/app'
 import ImageUpload from '@/components/image-upload/image-upload.vue'
 
 // 状态: null=未提交, 0=待审核, 1=已通过, 2=已拒绝
 const status = ref<number | null>(null)
 const loading = ref(true)
+
+// 小区相关
+const communityId = ref(0)
+const communityName = ref('')
 
 // 图片数据
 const idcardFront = ref('')
@@ -114,9 +133,19 @@ const isDisabled = computed(() => {
 const fetchDetail = async () => {
     loading.value = true
     try {
-        const res = await getUserVerifyDetail()
+        // 先获取用户当前小区
+        const addressRes = await getUserAddress()
+        if (addressRes && addressRes.community_id) {
+            communityId.value = addressRes.community_id
+            communityName.value = addressRes.community_name || ''
+        }
+
+        // 查询该小区的认证状态
+        const res = await getUserVerifyDetail({ community_id: communityId.value || undefined })
         if (res && res.id) {
             status.value = res.status
+            communityName.value = res.community_name || communityName.value
+            communityId.value = res.community_id || communityId.value
             // 已拒绝时清空表单，允许重新填写
             if (res.status === 2) {
                 idcardFront.value = ''
@@ -152,44 +181,39 @@ const uploadImageFile = async (filePath: string): Promise<string> => {
     }
 }
 
+// 选择小区
+const handleSelectCommunity = () => {
+    uni.navigateTo({
+        url: '/pages/select-community/select-community?mode=verify'
+    })
+}
+
 // 拍摄身份证正面
 const handleCaptureFront = () => {
-    console.log('点击正面，当前状态:', status.value)
     if (status.value === 0 || status.value === 1) {
-        console.log('状态不允许操作')
         return
     }
     uni.chooseImage({
         count: 1,
         sourceType: ['camera', 'album'],
         success: async (res) => {
-            console.log('选择图片成功:', res)
             const uri = await uploadImageFile(res.tempFilePaths[0])
             idcardFront.value = uri
-        },
-        fail: (err) => {
-            console.log('选择图片失败:', err)
         }
     })
 }
 
 // 拍摄身份证反面
 const handleCaptureBack = () => {
-    console.log('点击反面，当前状态:', status.value)
     if (status.value === 0 || status.value === 1) {
-        console.log('状态不允许操作')
         return
     }
     uni.chooseImage({
         count: 1,
         sourceType: ['camera', 'album'],
         success: async (res) => {
-            console.log('选择图片成功:', res)
             const uri = await uploadImageFile(res.tempFilePaths[0])
             idcardBack.value = uri
-        },
-        fail: (err) => {
-            console.log('选择图片失败:', err)
         }
     })
 }
@@ -199,6 +223,10 @@ const handleSubmit = async () => {
     if (isDisabled.value) return
 
     // 表单验证
+    if (!communityId.value) {
+        uni.$u.toast('请选择要认证的小区')
+        return
+    }
     if (!idcardFront.value) {
         uni.$u.toast('请上传身份证正面')
         return
@@ -215,6 +243,7 @@ const handleSubmit = async () => {
     uni.showLoading({ title: '提交中...' })
     try {
         await submitUserVerify({
+            community_id: communityId.value,
             idcard_front: idcardFront.value,
             idcard_back: idcardBack.value,
             verify_materials: materials.value
@@ -231,6 +260,18 @@ const handleSubmit = async () => {
 
 onLoad(() => {
     fetchDetail()
+})
+
+// 每次页面显示时刷新（从小区选择页返回时）
+onShow(() => {
+    if (communityId.value > 0) return // 已有小区则不重复加载
+    // 尝试获取用户地址来填充小区
+    getUserAddress().then((res) => {
+        if (res && res.community_id) {
+            communityId.value = res.community_id
+            communityName.value = res.community_name || ''
+        }
+    }).catch(() => {})
 })
 </script>
 
@@ -276,6 +317,41 @@ onLoad(() => {
 
 .status-reject .status-text {
     color: #f04530;
+}
+
+.community-section {
+    margin: 20rpx 0;
+}
+
+.community-picker {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #ffffff;
+    border-radius: 15rpx;
+    padding: 24rpx 30rpx;
+}
+
+.community-name {
+    font-size: 28rpx;
+    color: #222929;
+    font-weight: 500;
+}
+
+.community-placeholder {
+    font-size: 28rpx;
+    color: #DADADA;
+}
+
+.picker-arrow {
+    font-size: 28rpx;
+    color: #9CA6A6;
+}
+
+.community-readonly {
+    background-color: #ffffff;
+    border-radius: 15rpx;
+    padding: 24rpx 30rpx;
 }
 
 .section-title {

@@ -87,6 +87,7 @@ import { useUserStore } from '@/stores/user'
 import { onShow } from '@dcloudio/uni-app'
 import { storeToRefs } from 'pinia'
 import { getUserVerifyDetail } from '@/api/userVerify'
+import { getUserAddress } from '@/api/community'
 import { getBillLists } from '@/api/bill'
 import { goToCustomerService } from '@/utils/util'
 
@@ -102,9 +103,11 @@ const billExpense = ref('0.00')
 
 onShow(async () => {
     userStore.getUser()
-    // 获取认证状态
+    // 获取认证状态（按当前小区查询）
     try {
-        const res = await getUserVerifyDetail()
+        const addressRes = await getUserAddress()
+        const communityId = addressRes?.community_id || 0
+        const res = await getUserVerifyDetail(communityId ? { community_id: communityId } : undefined)
         verifyStatus.value = res?.status ?? null
     } catch (e) {
         verifyStatus.value = null

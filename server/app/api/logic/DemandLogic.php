@@ -194,6 +194,17 @@ class DemandLogic extends BaseLogic
         try {
             Db::startTrans();
 
+            // 检查当前小区的业主认证状态
+            $verified = \app\common\model\user\UserVerify::where([
+                ['user_id', '=', $userId],
+                ['community_id', '=', $params['community_id']],
+                ['status', '=', UserVerifyEnum::STATUS_VERIFIED]
+            ])->findOrEmpty();
+
+            if ($verified->isEmpty()) {
+                throw new \Exception('请先完成该小区的业主认证');
+            }
+
             // 计算金额
             $amount = self::calculateAmount($params);
             if ($amount === false) {
@@ -314,19 +325,21 @@ class DemandLogic extends BaseLogic
         try {
             Db::startTrans();
 
-            // 检查业主认证状态
+            // 先获取需求信息
+            $demand = Demand::where('id', $demandId)->findOrEmpty();
+            if ($demand->isEmpty()) {
+                throw new \Exception('需求不存在');
+            }
+
+            // 检查该小区的业主认证状态
             $verified = \app\common\model\user\UserVerify::where([
                 ['user_id', '=', $userId],
+                ['community_id', '=', $demand->community_id],
                 ['status', '=', UserVerifyEnum::STATUS_VERIFIED]
             ])->findOrEmpty();
 
             if ($verified->isEmpty()) {
-                throw new \Exception('请先完成业主认证');
-            }
-
-            $demand = Demand::where('id', $demandId)->findOrEmpty();
-            if ($demand->isEmpty()) {
-                throw new \Exception('需求不存在');
+                throw new \Exception('请先完成该小区的业主认证');
             }
 
             // 验证状态
